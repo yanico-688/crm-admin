@@ -1,0 +1,58 @@
+name: aoto Windows
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: 🧠 Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: 🛠️ Build Project
+        run: |
+          npm install
+          npm run build
+
+      - name: 🛠️ 设置 SSH 私钥和连接复用
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          cat >> ~/.ssh/config <<EOF
+          Host winserver
+            HostName ${{ secrets.WINDOWS_HOST }}
+            User ${{ secrets.WINDOWS_USERNAME }}
+            Port 22
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h:%p
+            ControlPersist 10m
+            SendEnv LANG
+          EOF
+
+      - name: 📤 上传 dist 到 Windows（自动打包为 dist.tar.gz）
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.WINDOWS_HOST }}
+          username: ${{ secrets.WINDOWS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "dist"
+          target: "E:/crm_project/admin"

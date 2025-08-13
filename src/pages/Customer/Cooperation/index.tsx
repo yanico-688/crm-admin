@@ -1,0 +1,266 @@
+import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message, Switch, Tag } from 'antd';
+import React, { useRef, useState } from 'react';
+import DeleteLink from '@/components/DeleteLink';
+import DeleteButton from '@/components/DeleteButton';
+import { useAccess } from '@umijs/max';
+import ModalFormWrapper from '@/pages/Customer/Cooperation/components/CreateOrUpdate';
+import BatchCreate from './components/BatchCreate';
+
+type CooperationRecord = {
+  _id?: string;
+  status: '待合作' | '已合作';
+  contact: string;
+  informChatGPT5: boolean;
+  chatGPTReplyTags: string[];
+  totalFee: number;
+  settledFee: number;
+  unsettledFee: number;
+  firstCommission: number;
+  followUpCommission: number;
+  publishDate: string;
+  website: string;
+  owner: string;
+  remark?: string;
+};
+
+const STATUS_COLOR_MAP: Record<string, string> = {
+  待合作: 'default',
+  已合作: 'green',
+};
+const TAG_COLOR_MAP: Record<string, string> = {
+  放弃: 'default',
+  加评论: 'purple',
+  拒绝: 'red',
+  发文章: 'blue',
+  已完成: 'green',
+};
+const API_PATH = '/cooperationRecords';
+
+const handleAdd = async (fields: CooperationRecord) => {
+  const hide = message.loading('正在添加...');
+  try {
+    await addItem(API_PATH, { ...fields });
+    hide();
+    message.success('添加成功');
+    return true;
+  } catch (error: any) {
+    hide();
+    message.error(error?.response?.data?.message ?? '添加失败，请重试！');
+    return false;
+  }
+};
+
+const handleUpdate = async (fields: CooperationRecord) => {
+  const hide = message.loading('正在更新...');
+  try {
+    await updateItem(`${API_PATH}/${fields._id}`, fields);
+    hide();
+    message.success('更新成功');
+    return true;
+  } catch (error: any) {
+    hide();
+    message.error(error?.response?.data?.message ?? '更新失败，请重试！');
+    return false;
+  }
+};
+
+const handleRemove = async (ids: string[]) => {
+  const hide = message.loading('正在删除...');
+  if (!ids) return true;
+  try {
+    await removeItem(`${API_PATH}/delete-multiple`, { ids });
+    hide();
+    message.success('删除成功');
+    return true;
+  } catch (error: any) {
+    hide();
+    message.error(error?.response?.data?.message ?? '删除失败，请重试！');
+    return false;
+  }
+};
+
+const TableList: React.FC = () => {
+  const access = useAccess();
+  const actionRef = useRef<ActionType>();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [currentRow, setCurrentRow] = useState<CooperationRecord>();
+  const [selectedRows, setSelectedRows] = useState<CooperationRecord[]>([]);
+  const [batchCreateOpen, setBatchCreateOpen] = useState(false);
+  const columns: ProColumns<CooperationRecord>[] = [
+    {
+      title: '状态',
+      dataIndex: 'status',
+      hideInSearch: true,
+      filters: true,
+      render: (_, record) => (
+        <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>
+          {record.status}
+        </Tag>
+      ),
+    },
+    {
+      title: '联系方式',
+      dataIndex: 'contact',
+      copyable: true,
+    },
+    {
+      title: '告知ChatGPT5',
+      dataIndex: 'informChatGPT5',
+      hideInSearch: true,
+      render: (_, record) => (
+        <Switch
+          checked={record.informChatGPT5}
+          onChange={async (checked) => {
+            try {
+              await updateItem(`/cooperationRecords/${record._id}`, {
+                informChatGPT5: checked,
+              });
+              actionRef.current?.reload();
+            } catch (err) {
+              message.error('更新失败');
+            }
+          }}
+        />
+      ),
+    },
+    {
+      title: 'ChatGPT回复',     hideInSearch:true,
+      dataIndex: 'chatGPTReplyTags',
+      render: (_, record) =>
+        record.chatGPTReplyTags?.map((tag) => (
+          <Tag color={TAG_COLOR_MAP[tag]} key={tag}>
+            {tag}
+          </Tag>
+        )),
+    },
+    { title: '总稿费', dataIndex: 'totalFee', hideInSearch:true, render: (_, record) => `₩${record.totalFee}`,  },
+    { title: '已结稿费', dataIndex: 'settledFee',hideInSearch:true, render: (_, record) => `₩${record.settledFee}`, },
+    { title: '未结稿费', dataIndex: 'unsettledFee', hideInSearch:true, render: (_, record) => `₩${record.unsettledFee}`,},
+    { title: '首单佣金', dataIndex: 'firstCommission',hideInSearch:true, render: (_, record) => `${record.firstCommission}%`, },
+    { title: '后续佣金', dataIndex: 'followUpCommission', hideInSearch:true,render: (_, record) => `${record.followUpCommission}%`, },
+    { title: '发布日期', dataIndex: 'publishDate',hideInSearch:true, valueType: 'date' },
+    { title: '网址', dataIndex: 'website',hideInSearch:true, ellipsis: true },
+    { title: '负责人', dataIndex: 'owner',hideInSearch:true },
+    { title: '备注', dataIndex: 'remark',hideInSearch:true, ellipsis: true },
+    {
+      title: '操作',
+      dataIndex: 'option',
+      valueType: 'option',
+      fixed: 'right',
+      render: (_, record) => [
+        <a
+          key="update"
+          onClick={() => {
+            setUpdateModalOpen(true);
+            setCurrentRow(record);
+          }}
+        >
+          <EditOutlined /> 编辑
+        </a>,
+        access.canSuperAdmin && (
+          <DeleteLink
+            key="delete"
+            onOk={async () => {
+              await handleRemove([record._id!]);
+              setSelectedRows([]);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
+        ),
+      ],
+    },
+  ];
+
+  return (
+    <PageContainer>
+      <ProTable<CooperationRecord>
+        actionRef={actionRef}
+        rowKey="_id"
+        search={{ labelWidth: 120 }}
+        toolBarRender={() => [
+          <Button
+            type="primary"
+            key=''
+            onClick={() => setCreateModalOpen(true)}
+            icon={<PlusOutlined />}
+          >
+            新建
+          </Button>,
+          access.canAdmin && (
+            <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
+              批量导入
+            </Button>
+          ),
+          selectedRows.length > 0 && access.canSuperAdmin && (
+            <DeleteButton
+              onOk={async () => {
+                await handleRemove(selectedRows.map((item) => item._id!) as any);
+                setSelectedRows([]);
+                actionRef.current?.reloadAndRest?.();
+              }}
+            />
+          ),
+        ]}
+        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
+        columns={columns}
+        rowSelection={{
+          onChange: (_, rows) => setSelectedRows(rows),
+        }}
+      />
+      {selectedRows.length > 0 && (
+        <FooterToolbar
+          extra={
+            <div>
+              已选择 <a style={{ fontWeight: 600 }}>{selectedRows.length}</a> 项
+            </div>
+          }
+        />
+      )}
+
+      <ModalFormWrapper
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onFinish={async (value) => {
+          const success = await handleAdd(value);
+          if (success) {
+            setCreateModalOpen(false);
+            actionRef.current?.reload();
+          }
+          return success;
+        }}
+        title="新建合作登记"
+      />
+
+      <ModalFormWrapper
+        open={updateModalOpen}
+        onOpenChange={setUpdateModalOpen}
+        onFinish={async (value) => {
+          const success = await handleUpdate({ ...currentRow, ...value });
+          if (success) {
+            setUpdateModalOpen(false);
+            setCurrentRow(undefined);
+            actionRef.current?.reload();
+          }
+          return success;
+        }}
+        title="编辑合作登记"
+        initialValues={currentRow}
+      />
+      <BatchCreate
+        open={batchCreateOpen}
+        onOpenChange={setBatchCreateOpen}
+        onSuccess={() => {
+          setBatchCreateOpen(false);
+          actionRef.current?.reload();
+        }}
+      />
+    </PageContainer>
+  );
+};
+
+export default TableList;
