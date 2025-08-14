@@ -79,7 +79,6 @@ const BasicForm: React.FC<Props> = () => {
           name="name"
           label="姓名"
           width="md"
-          rules={[{ required: true, message: '请输入姓名' }]}
         />
         <ProFormText
           name="contact"
@@ -100,7 +99,6 @@ const BasicForm: React.FC<Props> = () => {
           name="emailSendTime"
           label="发邮件时间"
           width="md"
-          rules={[{ required: true, message: '请选择日期' }]}
         />
       </ProForm.Group>
 
@@ -111,7 +109,7 @@ const BasicForm: React.FC<Props> = () => {
           label="状态"
           width="md"
           options={STATUS_OPTIONS}
-          rules={[{ required: true, message: '请选择状态' }]}
+          initialValue={'未回复'}
         />
       </ProForm.Group>
 

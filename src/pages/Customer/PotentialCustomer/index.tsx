@@ -95,7 +95,17 @@ const TableList: React.FC = () => {
   const columns: ProColumns<PotentialCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
     { title: '联系方式', dataIndex: 'contact', copyable: true },
-    { title: '平台网址', dataIndex: 'platformUrl', ellipsis: true },
+    {
+      title: '平台网址',
+      dataIndex: 'platformUrl',
+      ellipsis: true,
+      render: (_, record) =>
+        <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
+          {record.platformUrl}
+        </a>
+    }
+,
+
     { title: '发邮件时间', dataIndex: 'emailSendTime', valueType: 'date', hideInSearch: true },
     { title: '二次邀约', dataIndex: 'secondInvitation', valueType: 'date', hideInSearch: true },
     {
@@ -111,7 +121,9 @@ const TableList: React.FC = () => {
       title: '博主数据',
       dataIndex: 'bloggerData',
       hideInSearch: true,
-      render: (val) => val ? <Image width={60} src={`${process.env.UMI_APP_API_URL}api${val}`} /> : '无',
+      render: (val) => val&&val!=='-' ?
+        <Image width={60} src={`${process.env.UMI_APP_API_URL?process.env.UMI_APP_API_URL:''}api${val?val:''}`} />
+         : '-',
     }
     ,
 

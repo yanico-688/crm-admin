@@ -69,7 +69,7 @@
   },
   {
     path: '/',
-    redirect: '/users/userManage',
+    redirect: '/customer/PotentialCustomer',
   },
   {
     path: '*',
