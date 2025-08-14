@@ -61,16 +61,16 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
 
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormDigit name="totalFee" label="总稿费" min={0} width="md" />
         <ProFormDigit name="settledFee" label="已结稿费" min={0} width="md" />
-      </ProForm.Group>
-      <ProForm.Group>
         <ProFormDigit name="unsettledFee" label="未结稿费" min={0} width="md" />
-        <ProFormDigit name="firstCommission" label="首单佣金" min={0} width="md" />
       </ProForm.Group>
       <ProForm.Group>
+        <ProFormDigit name="firstCommission" label="首单佣金" min={0} width="md" />
         <ProFormDigit name="followUpCommission" label="后续佣金" min={0} width="md" />
-        <ProFormDatePicker name="publishDate" label="发布日期" width="md" />
+      </ProForm.Group>
+      <ProForm.Group>
+        <ProFormDatePicker name="publishDate" label="初始发布" width="md" />
+        <ProFormDatePicker name="publishDate2" label="最新日期" width="md" />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormSelect

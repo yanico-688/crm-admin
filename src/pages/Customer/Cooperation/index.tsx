@@ -30,6 +30,8 @@ type CooperationRecord = {
 const STATUS_COLOR_MAP: Record<string, string> = {
   待合作: 'default',
   已合作: 'green',
+  确认放弃: 'red',
+  长期合作: 'blue',
 };
 const TAG_COLOR_MAP: Record<string, string> = {
   放弃: 'default',
@@ -96,13 +98,18 @@ const TableList: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       hideInSearch: true,
-      filters: true,
+      filters: Object.keys(STATUS_COLOR_MAP).map(key => ({
+        text: key,
+        value: key
+      })), // 从 map 动态生成筛选项
+      onFilter: (value, record) => record.status === value,
       render: (_, record) => (
         <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>
           {record.status}
         </Tag>
       ),
-    },
+    }
+,
     {
       title: '联系方式',
       width: 200,
