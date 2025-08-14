@@ -7,7 +7,7 @@ import {
   ProFormUploadDragger,
 } from '@ant-design/pro-components';
 import { Form, Input, message, UploadProps } from 'antd';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { uploadFormData } from '@/services/ant-design-pro/api';
 
 const STATUS_OPTIONS = [
@@ -25,7 +25,7 @@ interface Props {
 }
 
 const BasicForm: React.FC<Props> = () => {
-  // 自定义上传逻辑
+  // 上传逻辑
   const customRequest: UploadProps['customRequest'] = async (options) => {
     const { file, onSuccess, onError } = options;
     const formData = new FormData();
@@ -35,9 +35,7 @@ const BasicForm: React.FC<Props> = () => {
       const res = await uploadFormData('/potentialCustomers/blogData', formData);
       if (res.success) {
         message.success('上传成功');
-
-        onSuccess?.(res);
-
+        onSuccess?.(res); // 把返回值放进 response
       } else {
         message.error('上传失败');
       }
@@ -46,8 +44,36 @@ const BasicForm: React.FC<Props> = () => {
       onError?.(err);
     }
   };
+
+  // 粘贴上传
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it.kind === 'file') {
+        const file = it.getAsFile();
+        if (file && file.type.startsWith('image/')) {
+          // 模拟 antd Upload 的上传行为
+          const input = document.querySelector<HTMLInputElement>(
+            'input[type="file"]'
+          );
+          if (input) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            // 触发 change 事件，让 Upload 组件走正常流程
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          break;
+        }
+      }
+    }
+  }, []);
+
   return (
-    <>
+    <div tabIndex={0} onPaste={handlePaste} style={{ outline: 'none' }}>
       <ProForm.Group>
         <ProFormText
           name="name"
@@ -62,6 +88,7 @@ const BasicForm: React.FC<Props> = () => {
           rules={[{ required: true, message: '请输入联系方式' }]}
         />
       </ProForm.Group>
+
       <ProForm.Group>
         <ProFormText
           name="platformUrl"
@@ -76,6 +103,7 @@ const BasicForm: React.FC<Props> = () => {
           rules={[{ required: true, message: '请选择日期' }]}
         />
       </ProForm.Group>
+
       <ProForm.Group>
         <ProFormDatePicker name="secondInvitation" label="二次邀约" width="md" />
         <ProFormSelect
@@ -86,26 +114,29 @@ const BasicForm: React.FC<Props> = () => {
           rules={[{ required: true, message: '请选择状态' }]}
         />
       </ProForm.Group>
+
       <ProForm.Group>
         <ProFormText name="owner" label="负责人员" width="md" />
         <ProFormUploadDragger
-          name="image"
+          name="image" // 绑定到表单字段
           width="md"
           max={1}
           label="博主数据"
           fieldProps={{
             listType: 'picture-card',
-            customRequest: customRequest,
+            customRequest,
+            maxCount: 1,
           }}
         />
       </ProForm.Group>
+
       <ProForm.Group>
         <ProFormTextArea name="remark" label="备注" width="md" placeholder="请输入备注..." />
         <Form.Item name="_id" hidden>
           <Input type="hidden" />
         </Form.Item>
       </ProForm.Group>
-    </>
+    </div>
   );
 };
 

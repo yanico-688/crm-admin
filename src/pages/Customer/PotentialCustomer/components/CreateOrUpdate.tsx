@@ -27,11 +27,10 @@ const CustomerModalForm: React.FC<Props> = ({
         maskClosable: false,
       }}
       initialValues={initialValues}
-      // onFinish={onFinish}
       onFinish={async (value) => {
         await onFinish({
           ...value,
-          bloggerData: value.image[0]?.response?.filePath,
+          bloggerData: value.image?.[0]?.response?.filePath||'',
           image: '',
         });
       }}
