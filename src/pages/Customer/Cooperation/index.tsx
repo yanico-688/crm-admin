@@ -105,9 +105,25 @@ const TableList: React.FC = () => {
     },
     {
       title: '联系方式',
+      width: 200,
       dataIndex: 'contact',
-      copyable: true,
-    },
+      render: (_, record) =>
+        Array.isArray(record.contact)
+          ? record.contact.map((c, index) => {
+            // 定义几个颜色循环
+            const colors = ['blue', 'purple', 'magenta', 'cyan', 'volcano', 'orange', 'volcano','green', ];
+            const color = colors[index % colors.length];
+            return (
+              <Tag color={color} key={c} style={{ marginBottom: 4 }}>
+                {c}
+              </Tag>
+            );
+          })
+          : record.contact
+    }
+
+
+,
     {
       title: '告知ChatGPT5',
       dataIndex: 'informChatGPT5',
@@ -138,13 +154,50 @@ const TableList: React.FC = () => {
           </Tag>
         )),
     },
-    { title: '总稿费', dataIndex: 'totalFee', hideInSearch:true, render: (_, record) => `₩${record.totalFee}`,  },
-    { title: '已结稿费', dataIndex: 'settledFee',hideInSearch:true, render: (_, record) => `₩${record.settledFee}`, },
-    { title: '未结稿费', dataIndex: 'unsettledFee', hideInSearch:true, render: (_, record) => `₩${record.unsettledFee}`,},
+    { title: '总稿费', dataIndex: 'totalFee', hideInSearch:true, render: (_, record) => `${record.totalFee}`,  },
+    { title: '已结稿费', dataIndex: 'settledFee',hideInSearch:true, render: (_, record) => `${record.settledFee}`, },
+    { title: '未结稿费', dataIndex: 'unsettledFee', hideInSearch:true, render: (_, record) => `${record.unsettledFee}`,},
     { title: '首单佣金', dataIndex: 'firstCommission',hideInSearch:true, render: (_, record) => `${record.firstCommission}%`, },
     { title: '后续佣金', dataIndex: 'followUpCommission', hideInSearch:true,render: (_, record) => `${record.followUpCommission}%`, },
-    { title: '发布日期', dataIndex: 'publishDate',hideInSearch:true, valueType: 'date' },
-    { title: '网址', dataIndex: 'website',hideInSearch:true, ellipsis: true },
+    { title: '初始发布', dataIndex: 'publishDate',hideInSearch:true, valueType: 'date' },
+    { title: '最新发布', dataIndex: 'publishDate2',hideInSearch:true, valueType: 'date' },
+
+    {
+      title: '网址',
+      dataIndex: 'website',
+      width: 300,
+      hideInSearch: true,
+      render: (_, record) =>
+        Array.isArray(record.website)
+          ? record.website.map((c, index) => {
+            const colors = ['blue', 'purple', 'magenta', 'cyan', 'volcano', 'orange', 'volcano', 'green'];
+            const color = colors[index % colors.length];
+            return (
+              <Tag
+                color={color}
+                key={c}
+                style={{
+                  marginBottom: 4,
+                  whiteSpace: 'normal', // 允许换行
+                  wordBreak: 'break-all', // 网址长也能断行
+                }}
+              >
+                <a
+                  href={ c } // 没有 http 前缀时自动加
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'inherit',  }}
+                >
+                  {c}
+                </a>
+              </Tag>
+            );
+          })
+          : record.website
+    }
+
+    ,
+
     { title: '负责人', dataIndex: 'owner',hideInSearch:true },
     { title: '备注', dataIndex: 'remark',hideInSearch:true, ellipsis: true },
     {

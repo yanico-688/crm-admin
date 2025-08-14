@@ -40,12 +40,7 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
           rules={[{ required: true, message: '请选择状态' }]}
           width="md"
         />
-        <ProFormText
-          name="contact"
-          label="联系方式"
-          rules={[{ required: true, message: '请输入联系方式' }]}
-          width="md"
-        />
+        <ProFormSwitch name="informChatGPT5" label="告知ChatGPT5" width="md" />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormSelect
@@ -53,9 +48,17 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
           label="ChatGPT回复"
           mode="multiple"
           options={TAG_OPTIONS}
-          width="md"
+          width="xl"
         />
-        <ProFormSwitch name="informChatGPT5" label="告知ChatGPT5" width="md" />
+        <ProFormSelect
+          name="contact"
+          label="联系方式"
+          rules={[{ required: true, message: '请输入联系方式' }]}
+          mode="tags" // 允许手动输入多个
+          width="xl"
+          placeholder="可输入多个，用回车分隔"
+        />
+
       </ProForm.Group>
       <ProForm.Group>
         <ProFormDigit name="totalFee" label="总稿费" min={0} width="md" />
@@ -70,11 +73,17 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
         <ProFormDatePicker name="publishDate" label="发布日期" width="md" />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormText name="website" label="网址" width="md" />
-        <ProFormText name="owner" label="负责人" width="md" />
+        <ProFormSelect
+          name="website"
+          label="网址"
+          mode="tags"
+          width='xl'
+          placeholder="可输入多个，用回车分隔"
+        />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormTextArea name="remark" label="备注" width="xl" />
+        <ProFormText name="owner" label="负责人" width="md" />
+        <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
     </>
   );

@@ -162,15 +162,24 @@ const BatchImportCustomers = ({
   // 调后端验证重复
   const validateCustomers = async (data: PotentialCustomer[]) => {
     try {
-      const contacts = data.map((d) => d.contact); // 用联系方式查重
-      const res = await addItem('/potentialCustomers/check-duplicate', { contacts });
-      const duplicates: any = res.duplicates || [];
+      const batchSize = 100; // 每批校验数量
+      let duplicates: string[] = [];
+
+      // 分批循环
+      for (let i = 0; i < data.length; i += batchSize) {
+        const batch = data.slice(i, i + batchSize);
+        const contacts = batch.map((d) => d.contact);
+        const res = await addItem('/potentialCustomers/check-duplicate', { contacts });
+        duplicates = duplicates.concat(res.duplicates || []);
+      }
+
+      // 更新状态
       const updated = data.map((item) => ({
         ...item,
         validationStatus: duplicates.includes(item.contact) ? '重复' : '正常',
       }));
       setParsedData(updated);
-    } catch {
+    } catch (e) {
       message.error('校验失败');
     }
   };
@@ -199,8 +208,15 @@ const BatchImportCustomers = ({
           return false;
         }
         try {
-          await addItem('/potentialCustomers/import', { customers: parsedData });
-          message.success(`成功导入 ${parsedData.length} 条数据`);
+          const batchSize = 200; // 每批导入数量
+          let successCount = 0;
+
+          for (let i = 0; i < parsedData.length; i += batchSize) {
+            const batch = parsedData.slice(i, i + batchSize);
+            await addItem('/potentialCustomers/import', { customers: batch });
+            successCount += batch.length;
+          }
+          message.success(`成功导入 ${successCount} 条数据`);
           onSuccess();
           return true;
         } catch (err: any) {

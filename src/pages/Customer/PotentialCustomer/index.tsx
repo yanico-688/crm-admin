@@ -2,12 +2,11 @@ import { addItem, queryList, removeItem, updateItem } from '@/services/ant-desig
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal, Tag } from 'antd';
+import { Button, Image, message, Select, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
-import { Image } from 'antd';
 import CustomerModalForm from '@/pages/Customer/PotentialCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/PotentialCustomer/components/BatchCreate';
 
@@ -71,7 +70,7 @@ const handleRemove = async (ids: string[]) => {
   const hide = message.loading('正在删除...');
   if (!ids) return true;
   try {
-    await removeItem(API_PATH, { ids });
+    await removeItem(`${API_PATH}/delete-multiple`, { ids });
     hide();
     message.success('删除成功');
     return true;
@@ -91,14 +90,12 @@ const TableList: React.FC = () => {
   const [selectedRowsState, setSelectedRows] = useState<PotentialCustomer[]>([]);
   const access = useAccess();
 
-  // @ts-ignore
   const columns: ProColumns<PotentialCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
     { title: '联系方式', dataIndex: 'contact', copyable: true },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
-      ellipsis: true,
       render: (_, record) =>
         <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
           {record.platformUrl}
@@ -110,12 +107,49 @@ const TableList: React.FC = () => {
     { title: '二次邀约', dataIndex: 'secondInvitation', valueType: 'date', hideInSearch: true },
     {
       title: '状态',
-      dataIndex: 'status',
+      dataIndex: 'status',hideInSearch:true,
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Select
+            showSearch
+            placeholder="选择状态"
+            value={selectedKeys[0]}
+            onChange={(value) => setSelectedKeys(value ? [value] : [])}
+            style={{ width: 160 }}
+            options={Object.keys(STATUS_MAP).map(key => ({
+              label: STATUS_MAP[key].text,
+              value: key,
+            }))}
+          />
+          <Space style={{ marginTop: 8 }}>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              搜索
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              重置
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => record.status === value,
       render: (_, record) => {
         const status = STATUS_MAP[record.status] || { color: 'default', text: record.status };
         return <Tag color={status.color}>{status.text}</Tag>;
       },
-    },
+    }
+,
     { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
     {
       title: '博主数据',
@@ -170,7 +204,7 @@ const TableList: React.FC = () => {
           showTotal: (total) => `共 ${total} 条记录`,
         }}
         scroll={{ x: 1200 }}
-        search={{ labelWidth: 120, collapsed: false, span: 4 }}
+        search={{ labelWidth: 120, collapsed: false }}
         toolBarRender={() => [
           access.canAdmin && (
             <Button type="primary" key="primary" onClick={() => handleModalOpen(true)}>

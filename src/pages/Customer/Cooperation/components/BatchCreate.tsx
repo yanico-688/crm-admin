@@ -11,12 +11,12 @@ type CooperationRecord = {
   contact: string;
   informChatGPT5: boolean;
   chatGPTReplyTags: string[];
-  totalFee: number;
   settledFee: number;
   unsettledFee: number;
   firstCommission: number;
   followUpCommission: number;
   publishDate: string;
+  publishDate2: string;
   website: string;
   owner: string;
   remark?: string;
@@ -36,12 +36,12 @@ const columns: ProColumns<CooperationRecord>[] = [
     render: (_, record) =>
       record.chatGPTReplyTags?.map((tag) => <Tag key={tag}>{tag}</Tag>),
   },
-  { title: '总稿费', dataIndex: 'totalFee' },
   { title: '已结稿费', dataIndex: 'settledFee' },
   { title: '未结稿费', dataIndex: 'unsettledFee' },
   { title: '首单佣金', dataIndex: 'firstCommission' },
   { title: '后续佣金', dataIndex: 'followUpCommission' },
   { title: '发布日期', dataIndex: 'publishDate' },
+  { title: '发布日期2', dataIndex: 'publishDate2' },
   { title: '网址', dataIndex: 'website' },
   { title: '负责人', dataIndex: 'owner' },
   { title: '备注', dataIndex: 'remark' },
@@ -68,17 +68,18 @@ const BatchImportCooperation = ({
   onSuccess: () => void;
 }) => {
   const [parsedData, setParsedData] = useState<CooperationRecord[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const parseRows = (rows: any[][]) => {
     const result: CooperationRecord[] = [];
     for (const cells of rows) {
       if (cells.length < 5) continue;
-      const [
+      let [
         status,
         contact,
         informChatGPT5,
         chatGPTReplyTags,
-        totalFee,
         settledFee,
         unsettledFee,
         firstCommission,
@@ -88,26 +89,59 @@ const BatchImportCooperation = ({
         owner,
         remark,
       ] = cells;
+
+      // 1. 联系方式：去掉括号内容，拆分成数组
+      let contactList: string[] = [];
+      if (contact) {
+        contactList = contact
+          .replace(/\(.*?\)|（.*?）/g, '') // 去括号及内容
+          .trim()
+          .split(/[\s,，;；]+/) // 按空格/逗号/分号切分
+          .filter(Boolean);
+      }
+
+      // 2. 佣金处理
+      const formatCommission = (val: any) => {
+        let num = Number(val) || 0;
+        if (num > 0 && num < 1) {
+          num *= 100;
+        }
+        return num;
+      };
+
+      // 3. 发布日期拆分
+      let publishDate1 = '';
+      let publishDate2 = '';
+      if (publishDate) {
+        const parts = String(publishDate)
+          .split(/→|->|—|-/)
+          .map(s => s.trim())
+          .filter(Boolean);
+        if (parts.length > 0) publishDate1 = parseExcelDate(parts[0]);
+        if (parts.length > 1) publishDate2 = parseExcelDate(parts[1]);
+      }
+
       result.push({
         status,
-        contact,
-        informChatGPT5: informChatGPT5 === '是',
+        contact: contactList,
+        informChatGPT5: informChatGPT5 === 'Yes',
         chatGPTReplyTags: chatGPTReplyTags
-          ? chatGPTReplyTags.split('|').map((t: string) => t.trim())
+          ? chatGPTReplyTags.split(/[|，, ]+/).map((t: string) => t.trim())
           : [],
-        totalFee: Number(totalFee) || 0,
         settledFee: Number(settledFee) || 0,
         unsettledFee: Number(unsettledFee) || 0,
-        firstCommission: Number(firstCommission) || 0,
-        followUpCommission: Number(followUpCommission) || 0,
-        publishDate: parseExcelDate(publishDate),
+        firstCommission: formatCommission(firstCommission),
+        followUpCommission: formatCommission(followUpCommission),
+        publishDate: publishDate1,
+        publishDate2,
         website,
         owner,
         remark,
-      });
+      } as any);
     }
     setParsedData(result);
   };
+
 
   const onUpload = (file: File) => {
     const reader = new FileReader();
@@ -138,8 +172,15 @@ const BatchImportCooperation = ({
           return false;
         }
         try {
-          await addItem('/cooperationRecords/import', { records: parsedData });
-          message.success(`成功导入 ${parsedData.length} 条数据`);
+          const batchSize = 200; // 每批导入数量
+          let successCount = 0;
+
+          for (let i = 0; i < parsedData.length; i += batchSize) {
+            const batch = parsedData.slice(i, i + batchSize);
+            await addItem('/cooperationRecords/import', { records: batch });
+            successCount += batch.length;
+          }
+          message.success(`成功导入 ${successCount} 条数据`);
           onSuccess();
           return true;
         } catch (err: any) {
@@ -150,14 +191,14 @@ const BatchImportCooperation = ({
     >
       <ProFormTextArea
         label="粘贴 Excel 数据"
-        placeholder="状态, 联系方式, 告知ChatGPT5(是/否), ChatGPT回复(用|分隔), 总稿费, 已结稿费, 未结稿费, 首单佣金, 后续佣金, 发布日期, 网址, 负责人, 备注"
+        placeholder="状态, 联系方式, 告知ChatGPT5(是/否), ChatGPT回复(用|分隔), 已结稿费, 未结稿费, 首单佣金, 后续佣金, 发布日期, 网址, 负责人, 备注"
         fieldProps={{
           rows: 6,
           onChange: (e) => {
             const lines = e.target.value
               .trim()
               .split('\n')
-              .map((l) => l.split(/\t|,|，/).map((c) => c.trim()));
+              .map((l) => l.split(/\t/).map((c) => c.trim()));
             parseRows(lines);
           },
         }}
@@ -179,7 +220,17 @@ const BatchImportCooperation = ({
             dataSource={parsedData}
             columns={columns as any}
             rowKey={(r, i) => r.contact + i}
-            pagination={false}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: parsedData.length,
+              showSizeChanger: true,
+              showTotal: (total) => `共 ${total} 条`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
             scroll={{ x: 'max-content' }}
           />
         </>
