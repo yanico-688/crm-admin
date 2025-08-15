@@ -9,8 +9,10 @@ import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
 import ModalFormWrapper from '@/pages/Customer/Cooperation/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
+import { addExcelFilters } from '@/utils/tagsFilter';
 
 type CooperationRecord = {
+  isDuplicate: string;
   _id?: string;
   status: '待合作' | '已合作';
   contact: string;
@@ -93,44 +95,48 @@ const TableList: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<CooperationRecord>();
   const [selectedRows, setSelectedRows] = useState<CooperationRecord[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
+  const [dataSource, setDataSource] = useState<CooperationRecord[]>([]);
   const columns: ProColumns<CooperationRecord>[] = [
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch: true,
-      filters: Object.keys(STATUS_COLOR_MAP).map(key => ({
-        text: key,
-        value: key
-      })), // 从 map 动态生成筛选项
-      onFilter: (value, record) => record.status === value,
+      filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
+        text: k,
+        value: k,
+      })),
+      onFilter: true,
       render: (_, record) => (
-        <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>
-          {record.status}
-        </Tag>
+        <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
       ),
-    }
-,
+    },
     {
       title: '联系方式',
-      width: 200,
       dataIndex: 'contact',
+      width: 200,
       render: (_, record) =>
         Array.isArray(record.contact)
           ? record.contact.map((c, index) => {
-            // 定义几个颜色循环
-            const colors = ['blue', 'purple', 'magenta', 'cyan', 'volcano', 'orange', 'volcano','green', ];
-            const color = colors[index % colors.length];
-            return (
-              <Tag color={color} key={c} style={{ marginBottom: 4 }}>
-                {c}
-              </Tag>
-            );
-          })
-          : record.contact
-    }
+              const colors = [
+                'blue',
+                'purple',
+                'magenta',
+                'cyan',
+                'volcano',
+                'orange',
+                'volcano',
+                'green',
+              ];
+              const color = colors[index % colors.length];
+              return (
+                <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
+                  <Tag color={color}>{c}</Tag>
+                  {record.isDuplicate && <Tag color="red">重复！</Tag>}
+                </span>
+              );
+            })
+          : record.contact,
+    },
 
-
-,
     {
       title: '告知ChatGPT5',
       dataIndex: 'informChatGPT5',
@@ -152,7 +158,8 @@ const TableList: React.FC = () => {
       ),
     },
     {
-      title: 'ChatGPT回复',     hideInSearch:true,
+      title: 'ChatGPT回复',
+      hideInSearch: true,
       dataIndex: 'chatGPTReplyTags',
       render: (_, record) =>
         record.chatGPTReplyTags?.map((tag) => (
@@ -161,52 +168,85 @@ const TableList: React.FC = () => {
           </Tag>
         )),
     },
-    { title: '总稿费', dataIndex: 'totalFee', hideInSearch:true, render: (_, record) => `${record.totalFee}`,  },
-    { title: '已结稿费', dataIndex: 'settledFee',hideInSearch:true, render: (_, record) => `${record.settledFee}`, },
-    { title: '未结稿费', dataIndex: 'unsettledFee', hideInSearch:true, render: (_, record) => `${record.unsettledFee}`,},
-    { title: '首单佣金', dataIndex: 'firstCommission',hideInSearch:true, render: (_, record) => `${record.firstCommission}%`, },
-    { title: '后续佣金', dataIndex: 'followUpCommission', hideInSearch:true,render: (_, record) => `${record.followUpCommission}%`, },
-    { title: '初始发布', dataIndex: 'publishDate',hideInSearch:true, valueType: 'date' },
-    { title: '最新发布', dataIndex: 'publishDate2',hideInSearch:true, valueType: 'date' },
+    {
+      title: '总稿费（万）',
+      dataIndex: 'totalFee',
+      hideInSearch: true,
+      render: (_, record) => `${record.settledFee + record.unsettledFee}`,
+    },
+    {
+      title: '已结稿费（万）',
+      dataIndex: 'settledFee',
+      hideInSearch: true,
+      render: (_, record) => `${record.settledFee}`,
+    },
+    {
+      title: '未结稿费（万）',
+      dataIndex: 'unsettledFee',
+      hideInSearch: true,
+      render: (_, record) => `${record.unsettledFee}`,
+    },
+    {
+      title: '首单佣金',
+      dataIndex: 'firstCommission',
+      hideInSearch: true,
+    },
+    {
+      title: '后续佣金',
+      dataIndex: 'followUpCommission',
+      hideInSearch: true,
+    },
+    { title: '初始发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
+    { title: '最新发布', dataIndex: 'publishDate2', hideInSearch: true, valueType: 'date' },
+    {
+      title: '负责人',
+      dataIndex: 'owner',
+    },
 
     {
       title: '网址',
       dataIndex: 'website',
+      filters: true, // Excel 式筛选
       width: 300,
       hideInSearch: true,
       render: (_, record) =>
         Array.isArray(record.website)
           ? record.website.map((c, index) => {
-            const colors = ['blue', 'purple', 'magenta', 'cyan', 'volcano', 'orange', 'volcano', 'green'];
-            const color = colors[index % colors.length];
-            return (
-              <Tag
-                color={color}
-                key={c}
-                style={{
-                  marginBottom: 4,
-                  whiteSpace: 'normal', // 允许换行
-                  wordBreak: 'break-all', // 网址长也能断行
-                }}
-              >
-                <a
-                  href={ c } // 没有 http 前缀时自动加
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: 'inherit',  }}
+              const colors = [
+                'blue',
+                'purple',
+                'magenta',
+                'cyan',
+                'volcano',
+                'orange',
+                'volcano',
+                'green',
+              ];
+              const color = colors[index % colors.length];
+              return (
+                <Tag
+                  color={color}
+                  key={c}
+                  style={{
+                    marginBottom: 4,
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-all',
+                  }}
                 >
-                  {c}
-                </a>
-              </Tag>
-            );
-          })
-          : record.website
-    }
-
-    ,
-
-    { title: '负责人', dataIndex: 'owner',hideInSearch:true },
-    { title: '备注', dataIndex: 'remark',hideInSearch:true, ellipsis: true },
+                  <a
+                    href={c}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'inherit' }}
+                  >
+                    {c}
+                  </a>
+                </Tag>
+              );
+            })
+          : record.website,
+    },
+    { title: '备注', dataIndex: 'remark', hideInSearch: true, ellipsis: true },
     {
       title: '操作',
       dataIndex: 'option',
@@ -245,7 +285,7 @@ const TableList: React.FC = () => {
         toolBarRender={() => [
           <Button
             type="primary"
-            key=''
+            key=""
             onClick={() => setCreateModalOpen(true)}
             icon={<PlusOutlined />}
           >
@@ -266,8 +306,12 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
-        columns={columns}
+        request={async (params, sort, filter) => {
+          const res: any = await queryList(API_PATH, params, sort, filter);
+          setDataSource(res.data);
+          return res;
+        }}
+        columns={addExcelFilters(columns, dataSource)}
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}

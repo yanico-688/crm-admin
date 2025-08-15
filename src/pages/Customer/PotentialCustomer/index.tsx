@@ -29,7 +29,8 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
   已合作: { color: 'green', text: '已合作' },
   待合作: { color: 'blue', text: '待合作' },
   谈判: { color: 'orange', text: '谈判' },
-  未回复: { color: 'default', text: '未回复' },
+  未回复: { color: 'pink', text: '未回复' },
+  未联系: { color: 'default', text: '未联系' },
   确认放弃: { color: 'red', text: '确认放弃' },
   邮箱错的: { color: 'purple', text: '邮箱错的' },
   长期合作: { color: 'cyan', text: '长期合作' },
@@ -92,7 +93,12 @@ const TableList: React.FC = () => {
 
   const columns: ProColumns<PotentialCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
-    { title: '联系方式', dataIndex: 'contact', copyable: true },
+    { title: '联系方式', dataIndex: 'contact', copyable: true ,
+
+    }
+
+,
+
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
@@ -115,7 +121,7 @@ const TableList: React.FC = () => {
             placeholder="选择状态"
             value={selectedKeys[0]}
             onChange={(value) => setSelectedKeys(value ? [value] : [])}
-            style={{ width: 160 }}
+            style={{ width: 100 }}
             options={Object.keys(STATUS_MAP).map(key => ({
               label: STATUS_MAP[key].text,
               value: key,
@@ -126,7 +132,7 @@ const TableList: React.FC = () => {
               type="primary"
               onClick={() => confirm()}
               size="small"
-              style={{ width: 90 }}
+              style={{ width: 40 }}
             >
               搜索
             </Button>
@@ -136,7 +142,7 @@ const TableList: React.FC = () => {
                 confirm();
               }}
               size="small"
-              style={{ width: 90 }}
+              style={{ width: 40 }}
             >
               重置
             </Button>

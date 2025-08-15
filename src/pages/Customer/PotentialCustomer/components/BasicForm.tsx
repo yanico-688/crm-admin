@@ -15,6 +15,7 @@ const STATUS_OPTIONS = [
   { label: '待合作', value: '待合作' },
   { label: '谈判', value: '谈判' },
   { label: '未回复', value: '未回复' },
+  { label: '未联系', value: '未联系' },
   { label: '确认放弃', value: '确认放弃' },
   { label: '邮箱错的', value: '邮箱错的' },
   { label: '长期合作', value: '长期合作' },
@@ -109,7 +110,7 @@ const BasicForm: React.FC<Props> = () => {
           label="状态"
           width="md"
           options={STATUS_OPTIONS}
-          initialValue={'未回复'}
+          initialValue={'未联系'}
         />
       </ProForm.Group>
 

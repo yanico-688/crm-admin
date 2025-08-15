@@ -23,10 +23,11 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
   已合作: { color: 'green', text: '已合作' },
   待合作: { color: 'blue', text: '待合作' },
   谈判: { color: 'orange', text: '谈判' },
-  未回复: { color: 'default', text: '未回复' },
+  未回复: { color: 'pink', text: '未回复' },
+  未联系: { color: 'default', text: '未联系' },
   确认放弃: { color: 'red', text: '确认放弃' },
-  邮箱错的: { color: 'volcano', text: '邮箱错的' },
-  长期合作: { color: 'purple', text: '长期合作' },
+  邮箱错的: { color: 'purple', text: '邮箱错的' },
+  长期合作: { color: 'cyan', text: '长期合作' },
 };
 
 const columns: ProColumns<PotentialCustomer>[] = [

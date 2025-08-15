@@ -10,10 +10,15 @@ import {
 import React from 'react';
 
 const STATUS_OPTIONS = [
-  { label: '待合作', value: '待合作' },
   { label: '已合作', value: '已合作' },
+  { label: '待合作', value: '待合作' },
+  { label: '谈判', value: '谈判' },
+  { label: '未回复', value: '未回复' },
+  { label: '未联系', value: '未联系' },
+  { label: '确认放弃', value: '确认放弃' },
+  { label: '邮箱错的', value: '邮箱错的' },
+  { label: '长期合作', value: '长期合作' },
 ];
-
 import { Tag } from 'antd';
 
 const TAG_OPTIONS = [
@@ -61,8 +66,28 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
 
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormDigit name="settledFee" label="已结稿费" min={0} width="md" />
-        <ProFormDigit name="unsettledFee" label="未结稿费" min={0} width="md" />
+        <ProFormDigit
+          name="settledFee"
+          label="已结稿费"
+          min={0}
+          width="md"
+          fieldProps={{
+            precision: 2, // 允许保留两位小数
+            step: 0.01,   // 每次递增/递减的值
+          }}
+        />
+
+        <ProFormDigit
+          name="unsettledFee"
+          label="未结稿费"
+          min={0}
+          width="md"
+          fieldProps={{
+            precision: 2,
+            step: 0.01,
+          }}
+        />
+
       </ProForm.Group>
       <ProForm.Group>
         <ProFormDigit name="firstCommission" label="首单佣金" min={0} width="md" />
