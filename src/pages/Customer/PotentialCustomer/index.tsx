@@ -2,14 +2,15 @@ import { addItem, queryList, removeItem, updateItem } from '@/services/ant-desig
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Image, message, Select, Space, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Image, message, Tag } from 'antd';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
 import CustomerModalForm from '@/pages/Customer/PotentialCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/PotentialCustomer/components/BatchCreate';
-import { addExcelFilters } from '@/utils/tagsFilter';
+import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
+import { request } from '@@/exports';
 
 export type PotentialCustomer = {
   _id?: string;
@@ -23,7 +24,6 @@ export type PotentialCustomer = {
   bloggerData?: string; // 图片 URL
   remark?: string;
 };
-
 const API_PATH = '/potentialCustomers';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
@@ -90,49 +90,54 @@ const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<PotentialCustomer>();
   const [selectedRowsState, setSelectedRows] = useState<PotentialCustomer[]>([]);
-  const [dataSource, setDataSource] = useState<PotentialCustomer[]>([]);
+  const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
   const access = useAccess();
 
-  const columns: ProColumns<PotentialCustomer>[] = [
+  const baseColumns: ProColumns<PotentialCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
-    { title: '联系方式', dataIndex: 'contact', copyable: true ,
-
-    }
-
-,
+    {
+      title: '联系方式',
+      dataIndex: 'contact',
+      copyable: true,
+    },
 
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
-      render: (_, record) =>
+      render: (_, record) => (
         <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
           {record.platformUrl}
         </a>
-    }
-,
-
+      ),
+    },
     { title: '发邮件时间', dataIndex: 'emailSendTime', valueType: 'date', hideInSearch: true },
     { title: '二次邀约', dataIndex: 'secondInvitation', valueType: 'date', hideInSearch: true },
     {
       title: '状态',
-      dataIndex: 'status',hideInSearch:true,
+      dataIndex: 'status',
+      hideInSearch: true,
       render: (_, record) => {
         const status = STATUS_MAP[record.status] || { color: 'default', text: record.status };
         return <Tag color={status.color}>{status.text}</Tag>;
       },
-    }
-,
+    },
     { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
     {
       title: '博主数据',
       dataIndex: 'bloggerData',
       hideInSearch: true,
-      render: (val) => val&&val!=='-' ?
-        <Image width={60} src={`${process.env.UMI_APP_API_URL?process.env.UMI_APP_API_URL:''}api${val?val:''}`} />
-         : '-',
-    }
-    ,
-
+      render: (val) =>
+        val && val !== '-' ? (
+          <Image
+            width={60}
+            src={`${process.env.UMI_APP_API_URL ? process.env.UMI_APP_API_URL : ''}api${
+              val ? val : ''
+            }`}
+          />
+        ) : (
+          '-'
+        ),
+    },
     { title: '备注', dataIndex: 'remark', ellipsis: true, hideInSearch: true },
     {
       title: '操作',
@@ -162,13 +167,46 @@ const TableList: React.FC = () => {
       ],
     },
   ];
+  useEffect(() => {
+    request(`/potentialCustomers/unique-filters`).then((res) => {
+      if (res.success) setUniqueFilters(res.data);
+    });
+  }, []);
+  // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
+
+  const columnsWithStatic = useMemo(
+    () => addExcelFilters<PotentialCustomer>(baseColumns, uniqueFilters ),
+    [baseColumns, uniqueFilters],
+  );
+
+  // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
+
+  const HEAVY_FIELDS = ['website', 'platformUrl', 'remark', 'contact']; // 例如：候选很多的字段
+  const columns: ProColumns<PotentialCustomer>[] = useMemo(
+    () =>
+      columnsWithStatic.map((c) => {
+        if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
+        if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
+
+        const cc: ProColumns<PotentialCustomer> = { ...c };
+        delete (cc as any).filters;
+        delete (cc as any).filterSearch;
+        cc.filterMultiple = true; // 保持多选
+        cc.filterDropdown = remoteFilterDropdown(
+          c.dataIndex,
+          '/potentialCustomers/unique-filter-values',
+          50,
+        );
+        return cc;
+      }),
+    [columnsWithStatic],
+  );
 
   return (
     <PageContainer>
       <ProTable<PotentialCustomer, API.PageParams>
         actionRef={actionRef}
         rowKey="_id"
-
         pagination={{
           showSizeChanger: true, // 显示“每页数量”下拉
           showQuickJumper: true, // 显示页码跳转
@@ -199,13 +237,8 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-
-        request={async (params, sort, filter) => {
-          const res: any = await queryList(API_PATH, params, sort, filter);
-          setDataSource(res.data);
-          return res;
-        }}
-        columns={addExcelFilters(columns, dataSource)}
+        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
+        columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
         }}
@@ -255,7 +288,6 @@ const TableList: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
-
     </PageContainer>
   );
 };

@@ -3,13 +3,14 @@ import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, message, Switch, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
-import { useAccess } from '@umijs/max';
+import { request, useAccess } from '@umijs/max';
 import ModalFormWrapper from '@/pages/Customer/Cooperation/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
-import { addExcelFilters } from '@/utils/tagsFilter';
+import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
+import { PotentialCustomer } from '@/pages/Customer/PotentialCustomer';
 
 type CooperationRecord = {
   isDuplicate: string;
@@ -95,8 +96,8 @@ const TableList: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<CooperationRecord>();
   const [selectedRows, setSelectedRows] = useState<CooperationRecord[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
-  const [dataSource, setDataSource] = useState<CooperationRecord[]>([]);
-  const columns: ProColumns<CooperationRecord>[] = [
+  const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
+  const baseColumns: ProColumns<CooperationRecord>[] = [
     {
       title: '状态',
       dataIndex: 'status',
@@ -104,7 +105,6 @@ const TableList: React.FC = () => {
         text: k,
         value: k,
       })),
-      onFilter: true,
       render: (_, record) => (
         <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
       ),
@@ -276,6 +276,50 @@ const TableList: React.FC = () => {
     },
   ];
 
+
+  useEffect(() => {
+    request(`/cooperationRecords/unique-filters`).then((res) => {
+      if (res.success) setUniqueFilters(res.data);
+    });
+  }, []);
+  // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
+
+  const columnsWithStatic = useMemo(
+    () => addExcelFilters<CooperationRecord>(baseColumns, uniqueFilters ),
+    [baseColumns, uniqueFilters],
+  );
+
+  // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
+
+  const HEAVY_FIELDS = ['website', 'remark', 'contact']; // 例如：候选很多的字段
+  const columns: ProColumns<CooperationRecord>[] = useMemo(
+    () =>
+      columnsWithStatic.map((c) => {
+        if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
+        if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
+
+        const cc: ProColumns<CooperationRecord> = { ...c };
+        delete (cc as any).filters;
+        delete (cc as any).filterSearch;
+        cc.filterMultiple = true; // 保持多选
+        cc.filterDropdown = remoteFilterDropdown(
+          c.dataIndex,
+          '/cooperationRecords/unique-filter-values',
+          50,
+        );
+        return cc;
+      }),
+    [columnsWithStatic],
+  );
+
+
+  useEffect(() => {
+    request('/cooperationRecords/unique-filters')
+      .then(res => {
+        if (res.success) setUniqueFilters(res.data);
+      });
+  }, []);
+
   return (
     <PageContainer>
       <ProTable<CooperationRecord>
@@ -306,12 +350,8 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={async (params, sort, filter) => {
-          const res: any = await queryList(API_PATH, params, sort, filter);
-          setDataSource(res.data);
-          return res;
-        }}
-        columns={addExcelFilters(columns, dataSource)}
+        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
+        columns={columns}
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}
