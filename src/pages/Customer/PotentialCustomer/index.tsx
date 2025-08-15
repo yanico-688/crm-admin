@@ -9,6 +9,7 @@ import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
 import CustomerModalForm from '@/pages/Customer/PotentialCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/PotentialCustomer/components/BatchCreate';
+import { addExcelFilters } from '@/utils/tagsFilter';
 
 export type PotentialCustomer = {
   _id?: string;
@@ -89,6 +90,7 @@ const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<PotentialCustomer>();
   const [selectedRowsState, setSelectedRows] = useState<PotentialCustomer[]>([]);
+  const [dataSource, setDataSource] = useState<PotentialCustomer[]>([]);
   const access = useAccess();
 
   const columns: ProColumns<PotentialCustomer>[] = [
@@ -114,42 +116,6 @@ const TableList: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',hideInSearch:true,
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div style={{ padding: 8 }}>
-          <Select
-            showSearch
-            placeholder="选择状态"
-            value={selectedKeys[0]}
-            onChange={(value) => setSelectedKeys(value ? [value] : [])}
-            style={{ width: 100 }}
-            options={Object.keys(STATUS_MAP).map(key => ({
-              label: STATUS_MAP[key].text,
-              value: key,
-            }))}
-          />
-          <Space style={{ marginTop: 8 }}>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              size="small"
-              style={{ width: 40 }}
-            >
-              搜索
-            </Button>
-            <Button
-              onClick={() => {
-                clearFilters?.();
-                confirm();
-              }}
-              size="small"
-              style={{ width: 40 }}
-            >
-              重置
-            </Button>
-          </Space>
-        </div>
-      ),
-      onFilter: (value, record) => record.status === value,
       render: (_, record) => {
         const status = STATUS_MAP[record.status] || { color: 'default', text: record.status };
         return <Tag color={status.color}>{status.text}</Tag>;
@@ -202,6 +168,7 @@ const TableList: React.FC = () => {
       <ProTable<PotentialCustomer, API.PageParams>
         actionRef={actionRef}
         rowKey="_id"
+
         pagination={{
           showSizeChanger: true, // 显示“每页数量”下拉
           showQuickJumper: true, // 显示页码跳转
@@ -232,8 +199,13 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={async (params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
-        columns={columns}
+
+        request={async (params, sort, filter) => {
+          const res: any = await queryList(API_PATH, params, sort, filter);
+          setDataSource(res.data);
+          return res;
+        }}
+        columns={addExcelFilters(columns, dataSource)}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
         }}
