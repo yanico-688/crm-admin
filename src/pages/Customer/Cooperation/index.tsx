@@ -146,7 +146,7 @@ const TableList: React.FC = () => {
           checked={record.informChatGPT5}
           onChange={async (checked) => {
             try {
-              await updateItem(`/cooperationRecords/${record._id}`, {
+              await updateItem(`/${API_PATH}/${record._id}`, {
                 informChatGPT5: checked,
               });
               actionRef.current?.reload();
@@ -271,9 +271,13 @@ const TableList: React.FC = () => {
       ],
     },
   ];
+  const [summary, setSummary] = useState<{  settledFee: number; unsettledFee: number }>({
+    settledFee: 0,
+    unsettledFee: 0,
+  });
 
   useEffect(() => {
-    request(`/cooperationRecords/unique-filters`).then((res) => {
+    request(`${API_PATH}/unique-filters`).then((res) => {
       if (res.success) setUniqueFilters(res.data);
     });
   }, []);
@@ -299,7 +303,7 @@ const TableList: React.FC = () => {
         cc.filterMultiple = true; // 保持多选
         cc.filterDropdown = remoteFilterDropdown(
           c.dataIndex,
-          '/cooperationRecords/unique-filter-values',
+          `${API_PATH}/unique-filter-values`,
           50,
         );
         return cc;
@@ -308,7 +312,7 @@ const TableList: React.FC = () => {
   );
 
   useEffect(() => {
-    request('/cooperationRecords/unique-filters').then((res) => {
+    request(`${API_PATH}/unique-filters`).then((res) => {
       if (res.success) setUniqueFilters(res.data);
     });
   }, []);
@@ -359,7 +363,11 @@ const TableList: React.FC = () => {
               query[key] = val;
             }
           });
-          return (await queryList(API_PATH, query, sort)) as any;
+
+          // 1. 请求表格数据
+          const res= (await queryList(API_PATH, query, sort)) as any;
+          setSummary(res.summary[0]);
+          return res;
         }}
         columns={columns}
         rowSelection={{
@@ -413,6 +421,11 @@ const TableList: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
+      <div style={{ marginTop: 16, padding: 16, background: '#fafafa', borderRadius: 8 ,textAlign:'center'}}>
+        <span style={{ marginRight: 24 }}>总稿费（万）：<b>{summary.settledFee+summary.unsettledFee}</b></span>
+        <span style={{ marginRight: 24 }}>已结稿费（万）：<b>{summary.settledFee}</b></span>
+        <span>未结稿费（万）：<b>{summary.unsettledFee}</b></span>
+      </div>
     </PageContainer>
   );
 };
