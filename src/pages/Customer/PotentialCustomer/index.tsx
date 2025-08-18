@@ -138,7 +138,9 @@ const TableList: React.FC = () => {
           '-'
         ),
     },
-    { title: '备注', dataIndex: 'remark', ellipsis: true, hideInSearch: true },
+    { title: '备注', dataIndex: 'remark' },
+    { title: '创建时间', dataIndex: 'createdAt' , valueType: 'dateTime',hideInSearch:true},
+    { title: '修改时间', dataIndex: 'updatedAt' , valueType: 'dateTime',hideInSearch:true},
     {
       title: '操作',
       dataIndex: 'option',
@@ -237,7 +239,24 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
+        request={async (params, sort, filter) => {
+          const query: Record<string, any> = { ...params };
+          Object.entries(filter).forEach(([key, val]) => {
+            if (!val) return;
+            if (query[key]) {
+              query[key] = {
+                $or: [
+                  { [key]: { $regex: String(query[key]), $options: 'i' } },
+                  { [key]: { $in: val as string[] } },
+                ],
+              };
+            } else {
+              query[key] = val;
+            }
+          });
+          return await queryList(API_PATH, query, sort) as any;
+        }}
+
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),

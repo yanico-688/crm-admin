@@ -10,7 +10,6 @@ import { request, useAccess } from '@umijs/max';
 import ModalFormWrapper from '@/pages/Customer/Cooperation/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
-import { PotentialCustomer } from '@/pages/Customer/PotentialCustomer';
 
 type CooperationRecord = {
   isDuplicate: string;
@@ -101,6 +100,7 @@ const TableList: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
+      hideInSearch:true,
       filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
         text: k,
         value: k,
@@ -198,17 +198,11 @@ const TableList: React.FC = () => {
     },
     { title: '初始发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
     { title: '最新发布', dataIndex: 'publishDate2', hideInSearch: true, valueType: 'date' },
-    {
-      title: '负责人',
-      dataIndex: 'owner',
-    },
+    { title: '负责人', dataIndex: 'owner', hideInSearch: true },
 
     {
       title: '网址',
       dataIndex: 'website',
-      filters: true, // Excel 式筛选
-      width: 300,
-      hideInSearch: true,
       render: (_, record) =>
         Array.isArray(record.website)
           ? record.website.map((c, index) => {
@@ -246,7 +240,9 @@ const TableList: React.FC = () => {
             })
           : record.website,
     },
-    { title: '备注', dataIndex: 'remark', hideInSearch: true, ellipsis: true },
+    { title: '备注', dataIndex: 'remark' },
+    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
+    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
       dataIndex: 'option',
@@ -276,7 +272,6 @@ const TableList: React.FC = () => {
     },
   ];
 
-
   useEffect(() => {
     request(`/cooperationRecords/unique-filters`).then((res) => {
       if (res.success) setUniqueFilters(res.data);
@@ -285,7 +280,7 @@ const TableList: React.FC = () => {
   // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
 
   const columnsWithStatic = useMemo(
-    () => addExcelFilters<CooperationRecord>(baseColumns, uniqueFilters ),
+    () => addExcelFilters<CooperationRecord>(baseColumns, uniqueFilters),
     [baseColumns, uniqueFilters],
   );
 
@@ -312,12 +307,10 @@ const TableList: React.FC = () => {
     [columnsWithStatic],
   );
 
-
   useEffect(() => {
-    request('/cooperationRecords/unique-filters')
-      .then(res => {
-        if (res.success) setUniqueFilters(res.data);
-      });
+    request('/cooperationRecords/unique-filters').then((res) => {
+      if (res.success) setUniqueFilters(res.data);
+    });
   }, []);
 
   return (
@@ -325,7 +318,8 @@ const TableList: React.FC = () => {
       <ProTable<CooperationRecord>
         actionRef={actionRef}
         rowKey="_id"
-        search={{ labelWidth: 120 }}
+        scroll={{ x: 1200 }}
+        search={{ labelWidth: 120, collapsed: false }}
         toolBarRender={() => [
           <Button
             type="primary"
@@ -350,7 +344,23 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={(params, sort, filter) => queryList(API_PATH, params, sort, filter) as any}
+        request={async (params, sort, filter) => {
+          const query: Record<string, any> = { ...params };
+          Object.entries(filter).forEach(([key, val]) => {
+            if (!val) return;
+            if (query[key]) {
+              query[key] = {
+                $or: [
+                  { [key]: { $regex: String(query[key]), $options: 'i' } },
+                  { [key]: { $in: val as string[] } },
+                ],
+              };
+            } else {
+              query[key] = val;
+            }
+          });
+          return (await queryList(API_PATH, query, sort)) as any;
+        }}
         columns={columns}
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
