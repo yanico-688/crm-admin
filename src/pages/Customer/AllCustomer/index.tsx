@@ -30,11 +30,18 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
+      hideInSearch:true,
+      filters: Object.keys(STATUS_MAP).map((key) => ({
+        text: STATUS_MAP[key].text,
+        value: key,
+      })),
+      onFilter: true, // 让 ProTable 自动把选中的值带到 request 里
       render: (_, record) => {
         const statusItem = STATUS_MAP[record.status] || {};
         return <Tag color={statusItem.color}>{statusItem.text}</Tag>;
       },
     },
+
     { title: '标签', dataIndex: 'tags' },
     { title: '备注', dataIndex: 'remark', ellipsis: true },
 
