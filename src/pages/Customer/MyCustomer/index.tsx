@@ -7,12 +7,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
-import CustomerModalForm from '@/pages/Customer/PotentialCustomer/components/CreateOrUpdate';
-import BatchCreate from '@/pages/Customer/PotentialCustomer/components/BatchCreate';
+import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
+import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 import { request } from '@@/exports';
 
-export type PotentialCustomer = {
+export type MyCustomer = {
   _id?: string;
   name: string;
   contact: string;
@@ -24,7 +24,7 @@ export type PotentialCustomer = {
   bloggerData?: string; // 图片 URL
   remark?: string;
 };
-const API_PATH = '/potentialCustomers';
+const API_PATH = '/myCustomers';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   已合作: { color: 'green', text: '已合作' },
@@ -38,7 +38,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
 };
 
 // 添加
-const handleAdd = async (fields: PotentialCustomer) => {
+const handleAdd = async (fields: MyCustomer) => {
   const hide = message.loading('正在添加...');
   try {
     await addItem(API_PATH, { ...fields });
@@ -53,7 +53,7 @@ const handleAdd = async (fields: PotentialCustomer) => {
 };
 
 // 更新
-const handleUpdate = async (fields: PotentialCustomer) => {
+const handleUpdate = async (fields: MyCustomer) => {
   const hide = message.loading('正在更新...');
   try {
     await updateItem(`${API_PATH}/${fields._id}`, fields);
@@ -88,12 +88,12 @@ const TableList: React.FC = () => {
   const [updateModalOpen, handleUpdateModalOpen] = useState<boolean>(false);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const actionRef = useRef<ActionType>();
-  const [currentRow, setCurrentRow] = useState<PotentialCustomer>();
-  const [selectedRowsState, setSelectedRows] = useState<PotentialCustomer[]>([]);
+  const [currentRow, setCurrentRow] = useState<MyCustomer>();
+  const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
   const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
   const access = useAccess();
 
-  const baseColumns: ProColumns<PotentialCustomer>[] = [
+  const baseColumns: ProColumns<MyCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
     {
       title: '联系方式',
@@ -139,8 +139,8 @@ const TableList: React.FC = () => {
         ),
     },
     { title: '备注', dataIndex: 'remark' },
-    { title: '创建时间', dataIndex: 'createdAt' , valueType: 'dateTime',hideInSearch:true},
-    { title: '修改时间', dataIndex: 'updatedAt' , valueType: 'dateTime',hideInSearch:true},
+    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
+    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
       dataIndex: 'option',
@@ -170,33 +170,33 @@ const TableList: React.FC = () => {
     },
   ];
   useEffect(() => {
-    request(`/potentialCustomers/unique-filters`).then((res) => {
+    request(`${API_PATH}/unique-filters`).then((res) => {
       if (res.success) setUniqueFilters(res.data);
     });
   }, []);
   // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
 
   const columnsWithStatic = useMemo(
-    () => addExcelFilters<PotentialCustomer>(baseColumns, uniqueFilters ),
+    () => addExcelFilters<MyCustomer>(baseColumns, uniqueFilters),
     [baseColumns, uniqueFilters],
   );
 
   // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
 
   const HEAVY_FIELDS = ['website', 'platformUrl', 'remark', 'contact']; // 例如：候选很多的字段
-  const columns: ProColumns<PotentialCustomer>[] = useMemo(
+  const columns: ProColumns<MyCustomer>[] = useMemo(
     () =>
       columnsWithStatic.map((c) => {
         if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
         if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
 
-        const cc: ProColumns<PotentialCustomer> = { ...c };
+        const cc: ProColumns<MyCustomer> = { ...c };
         delete (cc as any).filters;
         delete (cc as any).filterSearch;
         cc.filterMultiple = true; // 保持多选
         cc.filterDropdown = remoteFilterDropdown(
           c.dataIndex,
-          '/potentialCustomers/unique-filter-values',
+          `${API_PATH}/unique-filter-values`,
           50,
         );
         return cc;
@@ -206,7 +206,7 @@ const TableList: React.FC = () => {
 
   return (
     <PageContainer>
-      <ProTable<PotentialCustomer, API.PageParams>
+      <ProTable<MyCustomer, API.PageParams>
         actionRef={actionRef}
         rowKey="_id"
         pagination={{
@@ -254,9 +254,8 @@ const TableList: React.FC = () => {
               query[key] = val;
             }
           });
-          return await queryList(API_PATH, query, sort) as any;
+          return (await queryList(API_PATH, query, sort)) as any;
         }}
-
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
@@ -278,7 +277,7 @@ const TableList: React.FC = () => {
         open={createModalOpen}
         onOpenChange={handleModalOpen}
         onFinish={async (value) => {
-          const success = await handleAdd(value as PotentialCustomer);
+          const success = await handleAdd(value as MyCustomer);
           if (success) {
             handleModalOpen(false);
             actionRef.current?.reload();

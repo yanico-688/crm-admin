@@ -22,8 +22,15 @@
         name: '客户总表',
         icon: 'link',
         access: 'userManage',
-        path: '/customer/PotentialCustomer',
-        component: './Customer/PotentialCustomer',
+        path: '/customer/AllCustomer',
+        component: './Customer/AllCustomer',
+      },
+      {
+        name: '我的客户',
+        icon: 'link',
+        access: 'userManage',
+        path: '/customer/MyCustomer',
+        component: './Customer/MyCustomer',
       },
       {
         name: '合作登记',
@@ -69,7 +76,7 @@
   },
   {
     path: '/',
-    redirect: '/customer/PotentialCustomer',
+    redirect: '/customer/MyCustomer',
   },
   {
     path: '*',
