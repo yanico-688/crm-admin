@@ -1,6 +1,6 @@
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ActionType, ModalForm, ProColumns, ProFormSelect } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, message, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
@@ -10,7 +10,9 @@ import { useAccess } from '@umijs/max';
 import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import { useLocation } from '@@/exports';
+import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
 
+type Option = { label: string; value: string };
 export type MyCustomer = {
   _id?: string;
   name: string;
@@ -78,14 +80,15 @@ const handleRemove = async (ids: string[]) => {
 };
 
 const TableList: React.FC = () => {
+  const access = useAccess();
+  const location = useLocation();
   const [createModalOpen, handleModalOpen] = useState<boolean>(false);
   const [updateModalOpen, handleUpdateModalOpen] = useState<boolean>(false);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<MyCustomer>();
   const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
-  const access = useAccess();
-  const location = useLocation();
+  const [modalOpen, setModalOpen] = useState(false);
 
   // 监听路由变化
   useEffect(() => {
@@ -163,108 +166,122 @@ const TableList: React.FC = () => {
   ];
 
   return (
-    <PageContainer>
-      <ProTable<MyCustomer, API.PageParams>
-        actionRef={actionRef}
-        rowKey="_id"
-        pagination={{
-          showSizeChanger: true, // 显示“每页数量”下拉
-          showQuickJumper: true, // 显示页码跳转
-          pageSize: 20, // 默认每页 10 条
-          pageSizeOptions: [5, 10, 20, 50, 100], // 自定义可选条数
-          showTotal: (total) => `共 ${total} 条记录`,
-        }}
-        scroll={{ x: 1200 }}
-        search={{ labelWidth: 120, collapsed: false }}
-        toolBarRender={() => [
-          access.canAdmin && (
-            <Button type="primary" key="primary" onClick={() => handleModalOpen(true)}>
-              <PlusOutlined /> 新建
-            </Button>
-          ),
-          access.canAdmin && (
-            <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
-              批量导入
-            </Button>
-          ),
-          selectedRowsState?.length > 0 && access.canSuperAdmin && (
-            <DeleteButton
-              onOk={async () => {
-                await handleRemove(selectedRowsState?.map((item) => item._id!) as any);
-                setSelectedRows([]);
-                actionRef.current?.reloadAndRest?.();
-              }}
-            />
-          ),
-        ]}
-        request={async (params, sort, filter) => {
-          const query: Record<string, any> = { ...params };
-          Object.entries(filter).forEach(([key, val]) => {
-            if (!val) return;
-            if (query[key]) {
-              query[key] = {
-                $or: [
-                  { [key]: { $regex: String(query[key]), $options: 'i' } },
-                  { [key]: { $in: val as string[] } },
-                ],
-              };
-            } else {
-              query[key] = val;
-            }
-          });
-          return (await queryList(API_PATH, query, sort)) as any;
-        }}
-        columns={baseColumns}
-        rowSelection={{
-          onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
-        }}
-      />
+    <>
 
-      {selectedRowsState?.length > 0 && (
-        <FooterToolbar
-          extra={
-            <div>
-              已选择 <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a> 项
-            </div>
-          }
-        />
-      )}
-
-      <CustomerModalForm
-        isNew
-        open={createModalOpen}
-        onOpenChange={handleModalOpen}
-        onFinish={async (value) => {
-          const success = await handleAdd(value as MyCustomer);
-          if (success) {
-            handleModalOpen(false);
-            actionRef.current?.reload();
-          }
-        }}
-      />
-
-      <CustomerModalForm
-        open={updateModalOpen}
-        onOpenChange={handleUpdateModalOpen}
-        initialValues={currentRow}
-        onFinish={async (value) => {
-          const success = await handleUpdate(value);
-          if (success) {
-            handleUpdateModalOpen(false);
-            setCurrentRow(undefined);
-            actionRef.current?.reload();
-          }
-        }}
-      />
-      <BatchCreate
-        open={batchCreateOpen}
-        onOpenChange={setBatchCreateOpen}
+      <ClaimCustomerModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
         onSuccess={() => {
-          setBatchCreateOpen(false);
+          setModalOpen(false);
           actionRef.current?.reload();
         }}
       />
-    </PageContainer>
+      <PageContainer>
+        <ProTable<MyCustomer, API.PageParams>
+          actionRef={actionRef}
+          rowKey="_id"
+          pagination={{
+            showSizeChanger: true, // 显示“每页数量”下拉
+            showQuickJumper: true, // 显示页码跳转
+            pageSize: 20, // 默认每页 10 条
+            pageSizeOptions: [5, 10, 20, 50, 100], // 自定义可选条数
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          scroll={{ x: 1200 }}
+          search={{ labelWidth: 120, collapsed: false }}
+          toolBarRender={() => [
+            <Button type="primary" key='' onClick={() => setModalOpen(true)}>
+              领取客户
+            </Button>,
+            access.canAdmin && (
+              <Button type="primary" key="primary" onClick={() => handleModalOpen(true)}>
+                <PlusOutlined /> 新建
+              </Button>
+            ),
+            access.canAdmin && (
+              <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
+                批量导入
+              </Button>
+            ),
+            selectedRowsState?.length > 0 && access.canSuperAdmin && (
+              <DeleteButton
+                onOk={async () => {
+                  await handleRemove(selectedRowsState?.map((item) => item._id!) as any);
+                  setSelectedRows([]);
+                  actionRef.current?.reloadAndRest?.();
+                }}
+              />
+            ),
+          ]}
+          request={async (params, sort, filter) => {
+            const query: Record<string, any> = { ...params };
+            Object.entries(filter).forEach(([key, val]) => {
+              if (!val) return;
+              if (query[key]) {
+                query[key] = {
+                  $or: [
+                    { [key]: { $regex: String(query[key]), $options: 'i' } },
+                    { [key]: { $in: val as string[] } },
+                  ],
+                };
+              } else {
+                query[key] = val;
+              }
+            });
+            return (await queryList(API_PATH, query, sort)) as any;
+          }}
+          columns={baseColumns}
+          rowSelection={{
+            onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
+          }}
+        />
+
+        {selectedRowsState?.length > 0 && (
+          <FooterToolbar
+            extra={
+              <div>
+                已选择 <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a> 项
+              </div>
+            }
+          />
+        )}
+
+        <CustomerModalForm
+          isNew
+          open={createModalOpen}
+          onOpenChange={handleModalOpen}
+          onFinish={async (value) => {
+            const success = await handleAdd(value as MyCustomer);
+            if (success) {
+              handleModalOpen(false);
+              actionRef.current?.reload();
+            }
+          }}
+        />
+
+        <CustomerModalForm
+          open={updateModalOpen}
+          onOpenChange={handleUpdateModalOpen}
+          initialValues={currentRow}
+          onFinish={async (value) => {
+            const success = await handleUpdate(value);
+            if (success) {
+              handleUpdateModalOpen(false);
+              setCurrentRow(undefined);
+              actionRef.current?.reload();
+            }
+          }}
+        />
+        <BatchCreate
+          open={batchCreateOpen}
+          onOpenChange={setBatchCreateOpen}
+          onSuccess={() => {
+            setBatchCreateOpen(false);
+            actionRef.current?.reload();
+          }}
+        />
+      </PageContainer>{' '}
+    </>
   );
 };
 
