@@ -31,6 +31,7 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
       modalProps={{ destroyOnClose: true }}
     >
       <ProForm.Group>
+        <ProFormText name="_id" hidden />
         <ProFormText
           name="contact"
           label="联系方式"
