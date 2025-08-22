@@ -2,15 +2,14 @@ import { addItem, queryList, removeItem, updateItem } from '@/services/ant-desig
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Image, message, Tag } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, message, Tag } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
 import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
-import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
-import { request, useLocation } from '@@/exports';
+import { useLocation } from '@@/exports';
 
 export type MyCustomer = {
   _id?: string;
@@ -29,8 +28,7 @@ const API_PATH = '/myCustomers';
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   谈判: { color: 'orange', text: '谈判' },
   未回复: { color: 'pink', text: '未回复' },
-  确认放弃: { color: 'red', text: '确认放弃' },
-  邮箱错的: { color: 'purple', text: '邮箱错误' },
+  已回复: { color: 'purple', text: '已回复' },
 };
 
 // 添加
@@ -128,7 +126,12 @@ const TableList: React.FC = () => {
       },
     },
     { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
-    { title: '客户分类', dataIndex: 'cusOpt', hideInSearch: true },
+    {
+      title: '客户分类',
+      dataIndex: 'cusOpt',
+      hideInSearch: true,
+      hideInTable: true,
+    },
     { title: '备注', dataIndex: 'remark' },
     {
       title: '操作',
@@ -158,9 +161,6 @@ const TableList: React.FC = () => {
       ],
     },
   ];
-
-
-
 
   return (
     <PageContainer>

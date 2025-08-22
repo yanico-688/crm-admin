@@ -22,8 +22,7 @@ interface PotentialCustomer {
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   谈判: { color: 'orange', text: '谈判' },
   未回复: { color: 'pink', text: '未回复' },
-  确认放弃: { color: 'red', text: '确认放弃' },
-  邮箱错的: { color: 'purple', text: '邮箱错误' },
+  已回复: { color: 'purple', text: '已回复' },
 };
 const columns: ProColumns<PotentialCustomer>[] = [
   { title: '姓名', dataIndex: 'name' },

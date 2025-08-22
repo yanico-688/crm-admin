@@ -11,8 +11,7 @@ import React from 'react';
 const STATUS_OPTIONS = [
   { label: '谈判', value: '谈判' },
   { label: '未回复', value: '未回复' },
-  { label: '确认放弃', value: '确认放弃' },
-  { label: '邮箱错误', value: '邮箱错的' },
+  { label: '已回复', value: '已回复' },
 ];
 const CUS_OPTIONS = [
   { label: '待合作', value: 1 },
