@@ -6,7 +6,7 @@ import { addItem } from '@/services/ant-design-pro/api';
 import * as XLSX from 'xlsx';
 import dayjs from 'dayjs';
 
-type CooperationRecord = {
+type PendingCustomer = {
   status: '待合作' | '已合作';
   contact: string;
   informChatGPT5: boolean;
@@ -22,7 +22,7 @@ type CooperationRecord = {
   remark?: string;
 };
 
-const columns: ProColumns<CooperationRecord>[] = [
+const columns: ProColumns<PendingCustomer>[] = [
   { title: '状态', dataIndex: 'status' },
   { title: '联系方式', dataIndex: 'contact' },
   {
@@ -67,12 +67,12 @@ const BatchImportCooperation = ({
   onOpenChange: (b: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const [parsedData, setParsedData] = useState<CooperationRecord[]>([]);
+  const [parsedData, setParsedData] = useState<PendingCustomer[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
   const parseRows = (rows: any[][]) => {
-    const result: CooperationRecord[] = [];
+    const result: PendingCustomer[] = [];
     for (const cells of rows) {
       if (cells.length < 5) continue;
       let [
@@ -177,7 +177,7 @@ const BatchImportCooperation = ({
 
           for (let i = 0; i < parsedData.length; i += batchSize) {
             const batch = parsedData.slice(i, i + batchSize);
-            await addItem('/cooperationRecords/import', { records: batch });
+            await addItem('/PendingCustomers/import', { records: batch });
             successCount += batch.length;
           }
           message.success(`成功导入 ${successCount} 条数据`);

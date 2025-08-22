@@ -11,7 +11,6 @@
     ],
   },
 
-
   {
     name: '客户管理',
     icon: 'table',
@@ -33,11 +32,18 @@
         component: './Customer/MyCustomer',
       },
       {
-        name: '合作登记',
+        name: '待合作',
         icon: 'TagOutlined',
-        access: 'roleManage',
-        path: '/customer/Cooperation',
-        component: './Customer/Cooperation',
+        access: 'userManage',
+        path: '/customer/pending',
+        component: './Customer/PendingCustomer',
+      },
+      {
+        name: '已合作',
+        icon: 'TagOutlined',
+        access: 'userManage',
+        path: '/customer/active',
+        component: './Customer/ActiveCustomer',
       },
       // {
       //   path: '/users/blog-crawler',

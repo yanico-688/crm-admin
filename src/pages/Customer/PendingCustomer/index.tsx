@@ -7,11 +7,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
 import { request, useAccess } from '@umijs/max';
-import ModalFormWrapper from '@/pages/Customer/Cooperation/components/CreateOrUpdate';
+import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 
-type CooperationRecord = {
+type PendingCustomer = {
   isDuplicate: string;
   _id?: string;
   status: '待合作' | '已合作';
@@ -42,9 +42,9 @@ const TAG_COLOR_MAP: Record<string, string> = {
   发文章: 'blue',
   已完成: 'green',
 };
-const API_PATH = '/cooperationRecords';
+const API_PATH = '/pendingCustomer';
 
-const handleAdd = async (fields: CooperationRecord) => {
+const handleAdd = async (fields: PendingCustomer) => {
   const hide = message.loading('正在添加...');
   try {
     await addItem(API_PATH, { ...fields });
@@ -58,7 +58,7 @@ const handleAdd = async (fields: CooperationRecord) => {
   }
 };
 
-const handleUpdate = async (fields: CooperationRecord) => {
+const handleUpdate = async (fields: PendingCustomer) => {
   const hide = message.loading('正在更新...');
   try {
     await updateItem(`${API_PATH}/${fields._id}`, fields);
@@ -92,11 +92,11 @@ const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [currentRow, setCurrentRow] = useState<CooperationRecord>();
-  const [selectedRows, setSelectedRows] = useState<CooperationRecord[]>([]);
+  const [currentRow, setCurrentRow] = useState<PendingCustomer>();
+  const [selectedRows, setSelectedRows] = useState<PendingCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
-  const baseColumns: ProColumns<CooperationRecord>[] = [
+  const baseColumns: ProColumns<PendingCustomer>[] = [
     {
       title: '状态',
       dataIndex: 'status',
@@ -284,20 +284,20 @@ const TableList: React.FC = () => {
   // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
 
   const columnsWithStatic = useMemo(
-    () => addExcelFilters<CooperationRecord>(baseColumns, uniqueFilters),
+    () => addExcelFilters<PendingCustomer>(baseColumns, uniqueFilters),
     [baseColumns, uniqueFilters],
   );
 
   // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
 
   const HEAVY_FIELDS = ['website', 'remark', 'contact']; // 例如：候选很多的字段
-  const columns: ProColumns<CooperationRecord>[] = useMemo(
+  const columns: ProColumns<PendingCustomer>[] = useMemo(
     () =>
       columnsWithStatic.map((c) => {
         if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
         if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
 
-        const cc: ProColumns<CooperationRecord> = { ...c };
+        const cc: ProColumns<PendingCustomer> = { ...c };
         delete (cc as any).filters;
         delete (cc as any).filterSearch;
         cc.filterMultiple = true; // 保持多选
@@ -319,7 +319,7 @@ const TableList: React.FC = () => {
 
   return (
     <PageContainer>
-      <ProTable<CooperationRecord>
+      <ProTable<PendingCustomer>
         actionRef={actionRef}
         rowKey="_id"
         scroll={{ x: 1200 }}
