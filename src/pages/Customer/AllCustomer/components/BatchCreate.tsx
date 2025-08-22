@@ -45,12 +45,6 @@ const columns: ProColumns<PotentialCustomer>[] = [
     },
   },
   { title: '负责人员', dataIndex: 'owner' },
-  {
-    title: '博主数据',
-    dataIndex: 'bloggerData',
-    render: (_, record) =>
-      record.bloggerData ? <Image width={60} src={record.bloggerData} /> : '无',
-  },
   { title: '备注', dataIndex: 'remark', ellipsis: true },
   {
     title: '验证状态',
@@ -170,7 +164,7 @@ const BatchImportCustomers = ({
       for (let i = 0; i < data.length; i += batchSize) {
         const batch = data.slice(i, i + batchSize);
         const contacts = batch.map((d) => d.contact);
-        const res = await addItem('/potentialCustomers/check-duplicate', { contacts });
+        const res = await addItem('/myCustomers/check-duplicate', { contacts });
         duplicates = duplicates.concat(res.duplicates || []);
       }
 
@@ -214,7 +208,7 @@ const BatchImportCustomers = ({
 
           for (let i = 0; i < parsedData.length; i += batchSize) {
             const batch = parsedData.slice(i, i + batchSize);
-            await addItem('/potentialCustomers/import', { customers: batch });
+            await addItem('/myCustomers/import', { customers: batch });
             successCount += batch.length;
           }
           message.success(`成功导入 ${successCount} 条数据`);
@@ -228,7 +222,7 @@ const BatchImportCustomers = ({
     >
       <ProFormTextArea
         label="粘贴 Excel 多列数据"
-        placeholder="按列顺序粘贴：姓名、联系方式、平台网址、发邮件时间、二次邀约、状态、负责人员、博主数据、备注"
+        placeholder="按列顺序粘贴：姓名、联系方式、平台网址、发邮件时间、二次邀约、状态、负责人员、备注"
         fieldProps={{
           rows: 6,
           onChange: (e) => {

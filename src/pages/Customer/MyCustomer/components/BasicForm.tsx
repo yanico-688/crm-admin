@@ -33,7 +33,7 @@ const BasicForm: React.FC<Props> = () => {
     formData.append('file', file as File);
 
     try {
-      const res = await uploadFormData('/potentialCustomers/blogData', formData);
+      const res = await uploadFormData('/myCustomers/blogData', formData);
       if (res.success) {
         message.success('上传成功');
         onSuccess?.(res); // 把返回值放进 response
@@ -114,20 +114,6 @@ const BasicForm: React.FC<Props> = () => {
         />
       </ProForm.Group>
 
-      <ProForm.Group>
-        <ProFormText name="owner" label="负责人员" width="md" />
-        <ProFormUploadDragger
-          name="image" // 绑定到表单字段
-          width="md"
-          max={1}
-          label="博主数据"
-          fieldProps={{
-            listType: 'picture-card',
-            customRequest,
-            maxCount: 1,
-          }}
-        />
-      </ProForm.Group>
 
       <ProForm.Group>
         <ProFormTextArea name="remark" label="备注" width="md" placeholder="请输入备注..." />

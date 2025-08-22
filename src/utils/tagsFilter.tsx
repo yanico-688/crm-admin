@@ -41,7 +41,7 @@ export function addExcelFilters<T extends Record<string, any>>(
  * @param fetchSize 每次返回多少条候选
  */
 export const remoteFilterDropdown =
-  (field: string, api = '/potentialCustomers/unique-filter-values', fetchSize = 50) =>
+  (field: string, api = '/myCustomers/unique-filter-values', fetchSize = 50) =>
     ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => {
       const [opts, setOpts] = React.useState<string[]>([]);
       const [loading, setLoading] = React.useState(false);

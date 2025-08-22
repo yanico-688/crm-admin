@@ -122,25 +122,7 @@ const TableList: React.FC = () => {
       },
     },
     { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
-    {
-      title: '博主数据',
-      dataIndex: 'bloggerData',
-      hideInSearch: true,
-      render: (val) =>
-        val && val !== '-' ? (
-          <Image
-            width={60}
-            src={`${process.env.UMI_APP_API_URL ? process.env.UMI_APP_API_URL : ''}api${
-              val ? val : ''
-            }`}
-          />
-        ) : (
-          '-'
-        ),
-    },
     { title: '备注', dataIndex: 'remark' },
-    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
-    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
       dataIndex: 'option',
