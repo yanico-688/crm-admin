@@ -10,7 +10,7 @@ import { useAccess } from '@umijs/max';
 import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
-import { request } from '@@/exports';
+import { request, useLocation } from '@@/exports';
 
 export type MyCustomer = {
   _id?: string;
@@ -27,14 +27,10 @@ export type MyCustomer = {
 const API_PATH = '/myCustomers';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
-  已合作: { color: 'green', text: '已合作' },
-  待合作: { color: 'blue', text: '待合作' },
   谈判: { color: 'orange', text: '谈判' },
   未回复: { color: 'pink', text: '未回复' },
-  未联系: { color: 'default', text: '未联系' },
   确认放弃: { color: 'red', text: '确认放弃' },
-  邮箱错的: { color: 'purple', text: '邮箱错的' },
-  长期合作: { color: 'cyan', text: '长期合作' },
+  邮箱错的: { color: 'purple', text: '邮箱错误' },
 };
 
 // 添加
@@ -90,9 +86,15 @@ const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<MyCustomer>();
   const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
-  const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
   const access = useAccess();
+  const location = useLocation();
 
+  // 监听路由变化
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [location.pathname]);
   const baseColumns: ProColumns<MyCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
     {
@@ -116,12 +118,17 @@ const TableList: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       hideInSearch: true,
+      filters: Object.keys(STATUS_MAP).map((key) => ({
+        text: STATUS_MAP[key].text,
+        value: key,
+      })),
       render: (_, record) => {
         const status = STATUS_MAP[record.status] || { color: 'default', text: record.status };
         return <Tag color={status.color}>{status.text}</Tag>;
       },
     },
     { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
+    { title: '客户分类', dataIndex: 'cusOpt', hideInSearch: true },
     { title: '备注', dataIndex: 'remark' },
     {
       title: '操作',
@@ -151,40 +158,9 @@ const TableList: React.FC = () => {
       ],
     },
   ];
-  useEffect(() => {
-    request(`${API_PATH}/unique-filters`).then((res) => {
-      if (res.success) setUniqueFilters(res.data);
-    });
-  }, []);
-  // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
 
-  const columnsWithStatic = useMemo(
-    () => addExcelFilters<MyCustomer>(baseColumns, uniqueFilters),
-    [baseColumns, uniqueFilters],
-  );
 
-  // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
 
-  const HEAVY_FIELDS = ['website', 'platformUrl', 'remark', 'contact']; // 例如：候选很多的字段
-  const columns: ProColumns<MyCustomer>[] = useMemo(
-    () =>
-      columnsWithStatic.map((c) => {
-        if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
-        if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
-
-        const cc: ProColumns<MyCustomer> = { ...c };
-        delete (cc as any).filters;
-        delete (cc as any).filterSearch;
-        cc.filterMultiple = true; // 保持多选
-        cc.filterDropdown = remoteFilterDropdown(
-          c.dataIndex,
-          `${API_PATH}/unique-filter-values`,
-          50,
-        );
-        return cc;
-      }),
-    [columnsWithStatic],
-  );
 
   return (
     <PageContainer>
@@ -238,7 +214,7 @@ const TableList: React.FC = () => {
           });
           return (await queryList(API_PATH, query, sort)) as any;
         }}
-        columns={columns}
+        columns={baseColumns}
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
         }}

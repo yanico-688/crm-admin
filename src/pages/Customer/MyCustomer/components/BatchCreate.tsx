@@ -1,5 +1,5 @@
-import { ModalForm, ProFormTextArea, ProColumns } from '@ant-design/pro-components';
-import { Alert, Button, Image, message, Table, Tag, Upload } from 'antd';
+import { ModalForm, ProColumns, ProFormTextArea } from '@ant-design/pro-components';
+import { Alert, Button, message, Table, Tag, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
 import { addItem } from '@/services/ant-design-pro/api';
@@ -20,16 +20,11 @@ interface PotentialCustomer {
 }
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
-  已合作: { color: 'green', text: '已合作' },
-  待合作: { color: 'blue', text: '待合作' },
   谈判: { color: 'orange', text: '谈判' },
   未回复: { color: 'pink', text: '未回复' },
-  未联系: { color: 'default', text: '未联系' },
   确认放弃: { color: 'red', text: '确认放弃' },
-  邮箱错的: { color: 'purple', text: '邮箱错的' },
-  长期合作: { color: 'cyan', text: '长期合作' },
+  邮箱错的: { color: 'purple', text: '邮箱错误' },
 };
-
 const columns: ProColumns<PotentialCustomer>[] = [
   { title: '姓名', dataIndex: 'name' },
   { title: '联系方式', dataIndex: 'contact', copyable: true },

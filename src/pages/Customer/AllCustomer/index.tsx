@@ -1,13 +1,15 @@
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, Popconfirm, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { queryList, addItem, updateItem, removeItem } from '@/services/ant-design-pro/api';
 import CustomerForm from './components/CustomerForm';
+import { useLocation } from '@@/exports';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   可领取: { color: 'green', text: '可领取' },
   已被领取: { color: 'pink', text: '已被领取' },
   被打回: { color: 'blue', text: '被打回' },
+  确认错误: { color: 'red', text: '确认错误' },
 };
 const API_PATH = '/allCustomers';
 const AllCustomersPage: React.FC = () => {
@@ -15,7 +17,14 @@ const AllCustomersPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState<any>();
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const location = useLocation();
 
+  // 监听路由变化
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [location.pathname]);
   const columns: ProColumns<any>[] = [
     { title: '联系方式', dataIndex: 'contact', copyable: true },
     {
@@ -35,7 +44,6 @@ const AllCustomersPage: React.FC = () => {
         text: STATUS_MAP[key].text,
         value: key,
       })),
-      onFilter: true, // 让 ProTable 自动把选中的值带到 request 里
       render: (_, record) => {
         const statusItem = STATUS_MAP[record.status] || {};
         return <Tag color={statusItem.color}>{statusItem.text}</Tag>;
@@ -81,7 +89,23 @@ const AllCustomersPage: React.FC = () => {
         rowSelection={{
           onChange: (_, selected) => setSelectedRows(selected),
         }}
-        request={(params) => queryList(API_PATH, params)}
+        request={async (params, sort, filter) => {
+          const query: Record<string, any> = { ...params };
+          Object.entries(filter).forEach(([key, val]) => {
+            if (!val) return;
+            if (query[key]) {
+              query[key] = {
+                $or: [
+                  { [key]: { $regex: String(query[key]), $options: 'i' } },
+                  { [key]: { $in: val as string[] } },
+                ],
+              };
+            } else {
+              query[key] = val;
+            }
+          });
+          return (await queryList(API_PATH, query, sort)) as any;
+        }}
         toolBarRender={() => [
           <Button
             key="create"

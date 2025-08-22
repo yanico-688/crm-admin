@@ -6,7 +6,7 @@ import { Button, message, Switch, Tag } from 'antd';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
-import { request, useAccess } from '@umijs/max';
+import { request, useAccess, useLocation } from '@umijs/max';
 import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
@@ -96,6 +96,14 @@ const TableList: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<PendingCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
+  const location = useLocation();
+
+  // 监听路由变化
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [location.pathname]);
   const baseColumns: ProColumns<PendingCustomer>[] = [
     {
       title: '状态',

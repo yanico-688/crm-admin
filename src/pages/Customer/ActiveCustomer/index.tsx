@@ -10,6 +10,7 @@ import { request, useAccess } from '@umijs/max';
 import ModalFormWrapper from '@/pages/Customer/ActiveCustomer/components/CreateOrUpdate';
 import BatchCreate from './components/BatchCreate';
 import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
+import { useLocation } from '@@/exports';
 
 type ActiveCustomer = {
   isDuplicate: string;
@@ -96,6 +97,14 @@ const TableList: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<ActiveCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
+  const location = useLocation();
+
+  // 监听路由变化
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [location.pathname]);
   const baseColumns: ProColumns<ActiveCustomer>[] = [
     {
       title: '状态',
