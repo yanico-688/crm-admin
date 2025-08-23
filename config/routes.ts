@@ -18,6 +18,13 @@
     path: '/customer',
     routes: [
       {
+        name: '数据看板',
+        icon: 'link',
+        access: 'userManage',
+        path: '/customer/DataDashboard',
+        component: './Customer/DataDashboard',
+      },
+      {
         name: '客户总表',
         icon: 'link',
         access: 'userManage',

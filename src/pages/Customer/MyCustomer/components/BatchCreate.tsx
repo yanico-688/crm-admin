@@ -4,14 +4,11 @@ import { UploadOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
 import { addItem } from '@/services/ant-design-pro/api';
 import * as XLSX from 'xlsx';
-import dayjs from 'dayjs';
 
 interface PotentialCustomer {
   name: string;
   contact: string;
   platformUrl: string;
-  emailSendTime: string;
-  secondInvitation?: string;
   status: string;
   owner?: string;
   bloggerData?: string;
@@ -28,8 +25,6 @@ const columns: ProColumns<PotentialCustomer>[] = [
   { title: '姓名', dataIndex: 'name' },
   { title: '联系方式', dataIndex: 'contact', copyable: true },
   { title: '平台网址', dataIndex: 'platformUrl', ellipsis: true },
-  { title: '发邮件时间', dataIndex: 'emailSendTime', valueType: 'dateTime' },
-  { title: '二次邀约', dataIndex: 'secondInvitation', valueType: 'dateTime' },
   {
     title: '状态',
     dataIndex: 'status',
@@ -65,54 +60,16 @@ const BatchImportCustomers = ({
   const [pageSize, setPageSize] = useState(20);
 
   // 模拟 Excel 日期解析
-  const parseExcelDate = (val: any): string => {
-    if (!val) return '';
-
-    // 1. Excel 数字日期
-    if (typeof val === 'number') {
-      const date = XLSX.SSF.parse_date_code(val);
-      if (date) {
-        return (
-          `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}` +
-          (date.H || date.M || date.S
-            ? ` ${String(date.H).padStart(2, '0')}:${String(date.M).padStart(2, '0')}`
-            : '')
-        );
-      }
-      return '';
-    }
-
-    // 2. 文本日期（支持多种格式）
-    if (typeof val === 'string') {
-      const formats = [
-        'YYYY年M月D日',
-        'YYYY年M月D日 HH:mm',
-        'YYYY-M-D',
-        'YYYY-M-D HH:mm',
-        'YYYY/M/D',
-        'YYYY/M/D HH:mm',
-        'YYYY.M.D',
-        'YYYY.M.D HH:mm',
-      ];
-
-      const d = dayjs(val.trim(), formats, true); // 严格模式匹配
-      return d.isValid() ? d.format('YYYY-MM-DD') : '';
-    }
-
-    return '';
-  };
 
   // 解析 Excel 行
   const parseRows = (rows: any[][]) => {
     const result: PotentialCustomer[] = [];
     for (const cells of rows) {
-      if (cells.length < 4) continue;
+      if (cells.length < 2) continue;
       const [
         name,
         contact,
         platformUrl,
-        emailSendTime,
-        secondInvitation,
         status,
         owner,
         bloggerData,
@@ -122,8 +79,6 @@ const BatchImportCustomers = ({
         name,
         contact,
         platformUrl,
-        emailSendTime: parseExcelDate(emailSendTime),
-        secondInvitation: parseExcelDate(secondInvitation),
         status,
         owner,
         bloggerData,
@@ -216,7 +171,7 @@ const BatchImportCustomers = ({
     >
       <ProFormTextArea
         label="粘贴 Excel 多列数据"
-        placeholder="按列顺序粘贴：姓名、联系方式、平台网址、发邮件时间、二次邀约、状态、负责人员、 备注"
+        placeholder="按列顺序粘贴：姓名、联系方式、平台网址、状态、负责人员、 备注"
         fieldProps={{
           rows: 6,
           onChange: (e) => {

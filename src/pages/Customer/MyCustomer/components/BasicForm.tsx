@@ -43,11 +43,6 @@ const BasicForm: React.FC<Props> = () => {
           width="md"
           rules={[{ required: true, message: '请输入平台网址' }]}
         />
-        <ProFormDatePicker name="emailSendTime" label="发邮件时间" width="md" />
-      </ProForm.Group>
-
-      <ProForm.Group>
-        <ProFormDatePicker name="secondInvitation" label="二次邀约" width="md" />
         <ProFormSelect
           name="status"
           label="回复状态"
@@ -56,6 +51,7 @@ const BasicForm: React.FC<Props> = () => {
           initialValue={'未回复'}
         />
       </ProForm.Group>
+
 
       <ProForm.Group>
         <ProFormSelect

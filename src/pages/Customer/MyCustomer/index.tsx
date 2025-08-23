@@ -1,7 +1,12 @@
 import { addItem, getList, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { ActionType, ModalForm, ProColumns, ProFormSelect } from '@ant-design/pro-components';
-import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
+import {
+  ActionType,
+  FooterToolbar,
+  PageContainer,
+  ProColumns,
+  ProTable,
+} from '@ant-design/pro-components';
 import { Badge, Button, Checkbox, message, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
@@ -26,7 +31,7 @@ export type MyCustomer = {
   owner?: string;
   bloggerData?: string; // 图片 URL
   remark?: string;
-  inviteHistory: Date[]
+  inviteHistory: Date[];
 };
 const API_PATH = '/myCustomers';
 
@@ -129,7 +134,6 @@ const TableList: React.FC = () => {
         </a>
       ),
     },
-    { title: '发邮件时间', dataIndex: 'emailSendTime', valueType: 'date', hideInSearch: true },
     {
       title: '最新发邮件时间',
       dataIndex: 'latestEmailSendTime',
