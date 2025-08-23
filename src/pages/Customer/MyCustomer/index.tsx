@@ -1,8 +1,8 @@
-import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { addItem, getList, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { ActionType, ModalForm, ProColumns, ProFormSelect } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { Badge, Button, Checkbox, message, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import DeleteLink from '@/components/DeleteLink';
 import DeleteButton from '@/components/DeleteButton';
@@ -11,9 +11,11 @@ import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUp
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import { useLocation } from '@@/exports';
 import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
+import { filterBoxStyle, filterDivStyle } from '@/services/ant-design-pro/yanico';
+import dayjs from 'dayjs';
 
-type Option = { label: string; value: string };
 export type MyCustomer = {
+  latestEmailSendTime?: Date;
   _id?: string;
   name: string;
   contact: string;
@@ -24,6 +26,7 @@ export type MyCustomer = {
   owner?: string;
   bloggerData?: string; // 图片 URL
   remark?: string;
+  inviteHistory: Date[]
 };
 const API_PATH = '/myCustomers';
 
@@ -89,7 +92,20 @@ const TableList: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<MyCustomer>();
   const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  // 状态筛选
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
+    谈判: 0,
+    未回复: 0,
+    已回复: 0,
+  });
 
+  // 初始化统计数量
+  useEffect(() => {
+    getList(`${API_PATH}/statusCounts`).then((res) => {
+      setStatusCounts(res.data as any); // 后端返回 { 谈判: 10, 未回复: 20, 已回复: 5 }
+    });
+  }, []);
   // 监听路由变化
   useEffect(() => {
     if (actionRef.current) {
@@ -114,15 +130,37 @@ const TableList: React.FC = () => {
       ),
     },
     { title: '发邮件时间', dataIndex: 'emailSendTime', valueType: 'date', hideInSearch: true },
-    { title: '二次邀约', dataIndex: 'secondInvitation', valueType: 'date', hideInSearch: true },
+    {
+      title: '最新发邮件时间',
+      dataIndex: 'latestEmailSendTime',
+      valueType: 'dateTime',
+      hideInSearch: true,
+    },
+
+    {
+      title: '邀约记录',
+      dataIndex: 'inviteHistory',
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.inviteHistory || record.inviteHistory.length === 0) {
+          return '-';
+        }
+        return (
+          <div>
+            {record.inviteHistory.map((time: Date | string, index: number) => (
+              <Tag key={index} color="blue">
+                {dayjs(time).format('YYYY-MM-DD HH:mm:ss')}
+              </Tag>
+            ))}
+          </div>
+        );
+      },
+
+    },
+
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch: true,
-      filters: Object.keys(STATUS_MAP).map((key) => ({
-        text: STATUS_MAP[key].text,
-        value: key,
-      })),
       render: (_, record) => {
         const status = STATUS_MAP[record.status] || { color: 'default', text: record.status };
         return <Tag color={status.color}>{status.text}</Tag>;
@@ -141,33 +179,67 @@ const TableList: React.FC = () => {
       dataIndex: 'option',
       valueType: 'option',
       fixed: 'right',
-      render: (_, record) => [
-        <a
-          key="update"
-          onClick={() => {
+      render: (_, record) => {
+
+        const today = new Date().setHours(0, 0, 0, 0);
+        const lastSend = record.latestEmailSendTime
+          ? new Date(record.latestEmailSendTime).setHours(0, 0, 0, 0)
+          : null;
+        const disabled = lastSend && lastSend === today;
+
+        return [
+
+
+        <a key="update" onClick={() => {
             handleUpdateModalOpen(true);
             setCurrentRow(record);
-          }}
-        >
-          <EditOutlined /> 编辑
-        </a>,
+          }}><EditOutlined /> 编辑</a>,
         access.canSuperAdmin && (
-          <DeleteLink
-            key="delete"
-            onOk={async () => {
+          <DeleteLink key="delete" onOk={async () => {
               await handleRemove([record._id!]);
               setSelectedRows([]);
               actionRef.current?.reloadAndRest?.();
             }}
           />
         ),
-      ],
+          <Button
+            key="send"
+            type="primary"
+            size="small"
+            shape="round"
+            ghost
+            disabled={disabled as any}
+            style={{
+              borderColor: disabled ? '#d9d9d9' : '#1890ff',
+              color: disabled ? '#bfbfbf' : '#1890ff',
+              backgroundColor: disabled ? '#f5f5f5' : 'transparent',
+              padding: '0 12px',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              opacity: disabled ? 0.8 : 1,
+            }}
+            onClick={async () => {
+              if (disabled) return;
+              try {
+                const res = await addItem(`/myCustomers/${record._id}/sendInvitation`, {});
+                if (res.success) {
+                  message.success('发送成功');
+                  actionRef.current?.reload();
+                } else {
+                  message.error(res.message || '发送失败');
+                }
+              } catch (err: any) {
+                message.error(err.response?.data?.message || '发送失败');
+              }
+            }}
+          >
+            发送
+          </Button>
+      ]}
     },
   ];
 
   return (
     <>
-
       <ClaimCustomerModal
         open={modalOpen}
         onOpenChange={setModalOpen}
@@ -177,6 +249,57 @@ const TableList: React.FC = () => {
         }}
       />
       <PageContainer>
+        {/* ✅ 状态筛选器 */}
+        <div style={filterDivStyle}>
+          <div style={filterBoxStyle}>
+            <span style={{ marginRight: 8 }}>状态筛选：</span>
+            {/* 全部 */}
+            <Checkbox
+              checked={statusFilter.length === 0} // 没有筛选时代表全部
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setStatusFilter([]); // 清空筛选，显示全部
+                }
+                actionRef.current?.reload();
+              }}
+              style={{ marginRight: 8 }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                全部
+                <Badge
+                  count={statusCounts.全部 || 0}
+                  style={{ backgroundColor: '#ff4d4f' }}
+                  overflowCount={9999}
+                  offset={[-5, -20]}
+                />
+              </span>
+            </Checkbox>
+            {Object.keys(STATUS_MAP).map((key) => (
+              <Checkbox
+                key={key}
+                checked={statusFilter.includes(key)}
+                onChange={(e) => {
+                  const newFilter = e.target.checked
+                    ? [...statusFilter, key]
+                    : statusFilter.filter((k) => k !== key);
+                  setStatusFilter(newFilter);
+                  actionRef.current?.reload(); // 刷新表格
+                }}
+                style={{ marginRight: 8 }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {STATUS_MAP[key].text}
+                  <Badge
+                    count={statusCounts[key]}
+                    style={{ backgroundColor: '#ff4d4f' }}
+                    overflowCount={9999}
+                    offset={[-5, -20]}
+                  />
+                </span>
+              </Checkbox>
+            ))}
+          </div>
+        </div>
         <ProTable<MyCustomer, API.PageParams>
           actionRef={actionRef}
           rowKey="_id"
@@ -190,7 +313,7 @@ const TableList: React.FC = () => {
           scroll={{ x: 1200 }}
           search={{ labelWidth: 120, collapsed: false }}
           toolBarRender={() => [
-            <Button type="primary" key='' onClick={() => setModalOpen(true)}>
+            <Button type="primary" key="" onClick={() => setModalOpen(true)}>
               领取客户
             </Button>,
             access.canAdmin && (
@@ -213,21 +336,11 @@ const TableList: React.FC = () => {
               />
             ),
           ]}
-          request={async (params, sort, filter) => {
+          request={async (params, sort) => {
             const query: Record<string, any> = { ...params };
-            Object.entries(filter).forEach(([key, val]) => {
-              if (!val) return;
-              if (query[key]) {
-                query[key] = {
-                  $or: [
-                    { [key]: { $regex: String(query[key]), $options: 'i' } },
-                    { [key]: { $in: val as string[] } },
-                  ],
-                };
-              } else {
-                query[key] = val;
-              }
-            });
+            if (statusFilter.length > 0) {
+              query.status = statusFilter;
+            }
             return (await queryList(API_PATH, query, sort)) as any;
           }}
           columns={baseColumns}
