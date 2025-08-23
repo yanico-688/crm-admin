@@ -1,8 +1,7 @@
 import { getList, queryItem } from '@/services/ant-design-pro/api';
+import { Segmented } from 'antd'; // 🔑 用 Segmented 实现 Tabs 效果
 import * as echarts from 'echarts';
 import React, { useEffect, useRef, useState } from 'react';
-import { Select } from 'antd';
-import { Segmented } from 'antd'; // 🔑 用 Segmented 实现 Tabs 效果
 // 固定颜色映射
 const colors: Record<string, string> = {
   未回复: '#d9d9d9',
@@ -85,28 +84,51 @@ const DataDashboard: React.FC = () => {
       window.removeEventListener('resize', resize);
     };
   }, [data]);
+  // ✅ 渲染柱状图（每日趋势）
+  type DailyRecord = {
+    date: string;
+    发送: number;
+    回访: number;
+    谈判: number;
+    未回复: number;
+    已回复: number;
+    待合作: number;
+  };
 
-  // 渲染柱状图
   useEffect(() => {
-    if (!barRef.current || data.length === 0) return;
+    if (!barRef.current) return;
     const chart = echarts.init(barRef.current);
 
-    chart.setOption({
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      grid: { top: 40, left: 40, right: 40, bottom: 60 },
-      xAxis: { type: 'category', data: data.map((d) => d.name) },
-      yAxis: { type: 'value' },
-      series: [
-        {
+    queryItem(`${API_PATH}/dailyStatus`, selectedOwner ? { owner: selectedOwner } : {}).then(
+      (res) => {
+        if (!res.success) return;
+        console.log('后端返回的数据:', res.data); // 👀 先看看这里面有没有今天
+        const dailyData: DailyRecord[] = res.data;
+
+        const dates = dailyData.map((d) => d.date);
+        const series = [
+          { name: '发送', color: '#1890ff' },
+          { name: '回访', color: '#13c2c2' },
+          { name: '谈判', color: '#fa8c16' },
+          { name: '待合作', color: '#40a9ff' },
+        ].map((s) => ({
+          name: s.name,
           type: 'bar',
-          barWidth: '50%',
-          data: data.map((d) => ({
-            value: d.value,
-            itemStyle: { color: colors[d.name], borderRadius: [6, 6, 0, 0] },
-          })),
-        },
-      ],
-    });
+          emphasis: { focus: 'series' },
+          data: dailyData.map((d) => d[s.name as keyof DailyRecord] as number), // ✅ 索引类型
+          itemStyle: { color: s.color, borderRadius: [6, 6, 0, 0] },
+        }));
+
+        chart.setOption({
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          legend: { top: 0 },
+          grid: { top: 60, left: 40, right: 40, bottom: 40 },
+          xAxis: { type: 'category', data: dates },
+          yAxis: { type: 'value' },
+          series,
+        });
+      },
+    );
 
     const resize = () => chart.resize();
     window.addEventListener('resize', resize);
@@ -114,7 +136,7 @@ const DataDashboard: React.FC = () => {
       chart.dispose();
       window.removeEventListener('resize', resize);
     };
-  }, [data]);
+  }, [selectedOwner]);
 
   return (
     <div style={{ padding: 20 }}>

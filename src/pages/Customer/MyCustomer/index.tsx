@@ -178,6 +178,7 @@ const TableList: React.FC = () => {
       hideInTable: true,
     },
     { title: '备注', dataIndex: 'remark' },
+    { title: '修改时间', dataIndex: 'updatedAt',valueType:'dateTime',sorter:true },
     {
       title: '操作',
       dataIndex: 'option',
@@ -342,11 +343,22 @@ const TableList: React.FC = () => {
           ]}
           request={async (params, sort) => {
             const query: Record<string, any> = { ...params };
+
+            // ✅ 状态筛选
             if (statusFilter.length > 0) {
               query.status = statusFilter;
             }
-            return (await queryList(API_PATH, query, sort)) as any;
+
+            // ✅ 排序
+            if (sort && Object.keys(sort).length > 0) {
+              const [field, order] = Object.entries(sort)[0];
+              query.sortField = field;
+              query.sortOrder = order; // ascend / descend
+            }
+
+            return (await queryList(API_PATH, query)) as any;
           }}
+
           columns={baseColumns}
           rowSelection={{
             onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
