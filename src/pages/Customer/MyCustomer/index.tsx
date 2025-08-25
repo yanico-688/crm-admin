@@ -117,6 +117,18 @@ const TableList: React.FC = () => {
       actionRef.current.reload();
     }
   }, [location.pathname]);
+  const [ownerFilters, setOwnerFilters] = useState<{text: string, value: string}[]>([]);
+
+  useEffect(() => {
+    getList('/myCustomers/owners').then(res => {
+      if (res.success) {
+        setOwnerFilters(res.data.map((o: string) => ({ text: o, value: o })));
+      }
+    });
+  }, []);
+
+
+
   const baseColumns: ProColumns<MyCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
     {
@@ -170,7 +182,7 @@ const TableList: React.FC = () => {
         return <Tag color={status.color}>{status.text}</Tag>;
       },
     },
-    { title: '负责人员', dataIndex: 'owner', hideInSearch: true },
+    { title: '负责人员', dataIndex: 'owner', hideInSearch: true ,filters:ownerFilters,filterMode: 'menu' },
     {
       title: '客户分类',
       dataIndex: 'cusOpt',
@@ -341,12 +353,17 @@ const TableList: React.FC = () => {
               />
             ),
           ]}
-          request={async (params, sort) => {
+          request={async (params, sort, filter) => {
             const query: Record<string, any> = { ...params };
 
             // ✅ 状态筛选
             if (statusFilter.length > 0) {
               query.status = statusFilter;
+            }
+
+            // ✅ 负责人员筛选（filter 传过来的值）
+            if (filter.owner) {
+              query.owner = filter.owner;
             }
 
             // ✅ 排序

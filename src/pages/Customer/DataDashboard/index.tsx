@@ -102,9 +102,7 @@ const DataDashboard: React.FC = () => {
     queryItem(`${API_PATH}/dailyStatus`, selectedOwner ? { owner: selectedOwner } : {}).then(
       (res) => {
         if (!res.success) return;
-        console.log('后端返回的数据:', res.data); // 👀 先看看这里面有没有今天
         const dailyData: DailyRecord[] = res.data;
-
         const dates = dailyData.map((d) => d.date);
         const series = [
           { name: '发送', color: '#1890ff' },
