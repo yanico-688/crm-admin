@@ -80,11 +80,11 @@
         path: '/users/roleManage',
         component: './Roles',
       },
-      // {
-      //   path: '/users/blog-crawler',
-      //   name: '数据同步',
-      //   component: './BlogCrawler',
-      // },
+      {
+        path: '/users/blog-crawler',
+        name: '数据同步',
+        component: './BlogCrawler',
+      },
     ],
   },
   {
