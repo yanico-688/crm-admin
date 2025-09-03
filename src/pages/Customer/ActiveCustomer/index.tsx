@@ -375,7 +375,7 @@ const TableList: React.FC = () => {
 
           // 1. 请求表格数据
           const res= (await queryList(API_PATH, query, sort)) as any;
-          setSummary(res.summary[0]);
+          setSummary(res.summary?.[0] ?? { settledFee: 0, unsettledFee: 0 });
           return res;
         }}
         columns={columns}
@@ -430,11 +430,18 @@ const TableList: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
-      {/*<div style={{ marginTop: 16, padding: 16, background: '#fafafa', borderRadius: 8 ,textAlign:'center'}}>*/}
-      {/*  <span style={{ marginRight: 24 }}>总稿费（万）：<b>{(summary?.settledFee?summary.settledFee:0)+(summary.unsettledFee?summary.unsettledFee:0)}</b></span>*/}
-      {/*  <span style={{ marginRight: 24 }}>已结稿费（万）：<b>{summary?.settledFee?summary.settledFee:0}</b></span>*/}
-      {/*  <span>未结稿费（万）：<b>{summary.unsettledFee?summary.unsettledFee:0}</b></span>*/}
-      {/*</div>*/}
+      <div style={{ marginTop: 16, padding: 16, background: '#fafafa', borderRadius: 8 ,textAlign:'center'}}>
+  <span style={{ marginRight: 24 }}>
+    总稿费（万）：<b>{(summary.settledFee ?? 0) + (summary.unsettledFee ?? 0)}</b>
+  </span>
+        <span style={{ marginRight: 24 }}>
+    已结稿费（万）：<b>{summary.settledFee ?? 0}</b>
+  </span>
+        <span>
+    未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
+  </span>
+      </div>
+
     </PageContainer>
   );
 };
