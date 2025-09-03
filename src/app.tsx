@@ -56,7 +56,7 @@ export async function getInitialState(): Promise<{
 export const layout: ({initialState}: { initialState: any }) => any = ({initialState}) => {
   return {
     // ✅ 3. 父菜单项（带子菜单）使用红点
-    subMenuItemRender: (item, dom) => {
+    subMenuItemRender: (item:any, dom:any) => {
       if (item.name === '运营推广') {
         return (
           <YunYingRed dom={dom}></YunYingRed>
@@ -66,7 +66,7 @@ export const layout: ({initialState}: { initialState: any }) => any = ({initialS
     },
 
 
-    menuItemRender: (item, dom) => {
+    menuItemRender: (item:any, dom:any) => {
       if (item.name === '提现记录') {
         return (
           <Link to={item.path.replace('/*', '')} target={item.target}>
@@ -106,7 +106,7 @@ export const layout: ({initialState}: { initialState: any }) => any = ({initialS
     avatarProps: {
       src: initialState?.currentUser?.avatar,
       title: <AvatarName/>,
-      render: (_, avatarChildren) => {
+      render: (_:any, avatarChildren:any) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
       },
     },
