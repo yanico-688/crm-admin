@@ -50,8 +50,27 @@ const AllCustomersPage: React.FC = () => {
       },
     },
 
-    { title: '标签', dataIndex: 'tags' },
-    { title: '备注', dataIndex: 'remark', ellipsis: true },
+
+  {
+    title: '不可领取',
+      dataIndex: 'blockedOwners',
+    render: (_, record) => {
+    if (!record.blockedOwners || record.blockedOwners.length === 0) {
+      return '-';
+    }
+    return (
+      <>
+        {record.blockedOwners.map((owner: string, index: number) => (
+          <Tag key={index} color="blue">
+            {owner}
+          </Tag>
+        ))}
+      </>
+    );
+  },
+  }
+,
+  { title: '备注', dataIndex: 'remark', ellipsis: true },
 
     {
       title: '操作',
