@@ -244,6 +244,13 @@ const TableList: React.FC = () => {
       <ProTable<PendingCustomer>
         actionRef={actionRef}
         rowKey="_id"
+        pagination={{
+          showSizeChanger: true, // 显示“每页数量”下拉
+          showQuickJumper: true, // 显示页码跳转
+          defaultPageSize: 20, // 默认每页 10 条
+          pageSizeOptions: [5, 10, 20, 50, 100], // 自定义可选条数
+          showTotal: (total) => `共 ${total} 条记录`,
+        }}
         scroll={{ x: 1200 }}
         search={{ labelWidth: 120, collapsed: false }}
         toolBarRender={() => [

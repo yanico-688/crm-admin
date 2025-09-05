@@ -34,7 +34,7 @@ const columns: ProColumns<PotentialCustomer>[] = [
     },
   },
   { title: '负责人员', dataIndex: 'owner' },
-  { title: '备注', dataIndex: 'remark', ellipsis: true },
+  { title: '备注', dataIndex: 'remark' },
   {
     title: '验证状态',
     dataIndex: 'validationStatus',
@@ -72,7 +72,6 @@ const BatchImportCustomers = ({
         platformUrl,
         status,
         owner,
-        bloggerData,
         remark,
       ] = cells;
       result.push({
@@ -81,7 +80,6 @@ const BatchImportCustomers = ({
         platformUrl,
         status,
         owner,
-        bloggerData,
         remark,
         validationStatus: '待校验',
       });

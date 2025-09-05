@@ -127,6 +127,12 @@ const TableList: React.FC = () => {
   }, []);
 
   const baseColumns: ProColumns<MyCustomer>[] = [
+    {
+      title: '序号',
+      dataIndex: 'index',
+      valueType: 'index',
+    },
+
     { title: '姓名', dataIndex: 'name' },
     {
       title: '联系方式',
@@ -346,7 +352,7 @@ const TableList: React.FC = () => {
           pagination={{
             showSizeChanger: true, // 显示“每页数量”下拉
             showQuickJumper: true, // 显示页码跳转
-            pageSize: 20, // 默认每页 10 条
+            defaultPageSize: 20, // 默认每页 10 条
             pageSizeOptions: [5, 10, 20, 50, 100], // 自定义可选条数
             showTotal: (total) => `共 ${total} 条记录`,
           }}
@@ -377,18 +383,17 @@ const TableList: React.FC = () => {
             ),
           ]}
           request={async (params, sort, filter) => {
-            const query: Record<string, any> = { ...params };
-
+            const query: Record<string, any> = {
+              ...params,                                // ✅ 包含 current / pageSize
+            };
             // ✅ 状态筛选
             if (statusFilter.length > 0) {
               query.status = statusFilter;
             }
-
             // ✅ 负责人员筛选（filter 传过来的值）
             if (filter.owner) {
               query.owner = filter.owner;
             }
-
             // ✅ 排序
             if (sort && Object.keys(sort).length > 0) {
               const [field, order] = Object.entries(sort)[0];

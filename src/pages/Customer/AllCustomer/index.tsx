@@ -1,9 +1,9 @@
+import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, Popconfirm, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
-import { queryList, addItem, updateItem, removeItem } from '@/services/ant-design-pro/api';
 import CustomerForm from './components/CustomerForm';
-import { useLocation } from '@@/exports';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   可领取: { color: 'green', text: '可领取' },
@@ -39,7 +39,7 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch:true,
+      hideInSearch: true,
       filters: Object.keys(STATUS_MAP).map((key) => ({
         text: STATUS_MAP[key].text,
         value: key,
@@ -50,28 +50,26 @@ const AllCustomersPage: React.FC = () => {
       },
     },
 
-
-  {
-    title: '不可领取',
+    {
+      title: '不可领取',
       dataIndex: 'blockedOwners',
-    render: (_, record) => {
-    if (!record.blockedOwners || record.blockedOwners.length === 0) {
-      return '-';
-    }
-    return (
-      <>
-        {record.blockedOwners.map((owner: string, index: number) => (
-          <Tag key={index} color="blue">
-            {owner}
-          </Tag>
-        ))}
-      </>
-    );
-  },
-  }
-,
-  { title: '备注', dataIndex: 'remark', ellipsis: true },
-
+      render: (_, record) => {
+        if (!record.blockedOwners || record.blockedOwners.length === 0) {
+          return '-';
+        }
+        return (
+          <>
+            {record.blockedOwners.map((owner: string, index: number) => (
+              <Tag key={index} color="blue">
+                {owner}
+              </Tag>
+            ))}
+          </>
+        );
+      },
+    },
+    { title: '标签', dataIndex: 'tags' },
+    { title: '备注', dataIndex: 'remark', ellipsis: true },
     {
       title: '操作',
       valueType: 'option',
