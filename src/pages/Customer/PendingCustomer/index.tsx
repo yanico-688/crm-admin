@@ -1,15 +1,14 @@
+import DeleteButton from '@/components/DeleteButton';
+import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Switch, Tag } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import DeleteLink from '@/components/DeleteLink';
-import DeleteButton from '@/components/DeleteButton';
 import { request, useAccess, useLocation } from '@umijs/max';
-import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
+import { Button, message, Tag } from 'antd';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
-import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 
 type PendingCustomer = {
   isDuplicate: string;
@@ -34,13 +33,6 @@ const STATUS_COLOR_MAP: Record<string, string> = {
   已合作: 'green',
   确认放弃: 'red',
   长期合作: 'blue',
-};
-const TAG_COLOR_MAP: Record<string, string> = {
-  放弃: 'default',
-  加评论: 'purple',
-  拒绝: 'red',
-  发文章: 'blue',
-  已完成: 'green',
 };
 const API_PATH = '/pendingCustomer';
 
@@ -108,7 +100,7 @@ const TableList: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch:true,
+      hideInSearch: true,
       filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
         text: k,
         value: k,
@@ -146,55 +138,6 @@ const TableList: React.FC = () => {
     },
 
     {
-      title: '告知ChatGPT5',
-      dataIndex: 'informChatGPT5',
-      hideInSearch: true,
-      render: (_, record) => (
-        <Switch
-          checked={record.informChatGPT5}
-          onChange={async (checked) => {
-            try {
-              await updateItem(`/${API_PATH}/${record._id}`, {
-                informChatGPT5: checked,
-              });
-              actionRef.current?.reload();
-            } catch (err) {
-              message.error('更新失败');
-            }
-          }}
-        />
-      ),
-    },
-    {
-      title: 'ChatGPT回复',
-      hideInSearch: true,
-      dataIndex: 'chatGPTReplyTags',
-      render: (_, record) =>
-        record.chatGPTReplyTags?.map((tag) => (
-          <Tag color={TAG_COLOR_MAP[tag]} key={tag}>
-            {tag}
-          </Tag>
-        )),
-    },
-    {
-      title: '总稿费（万）',
-      dataIndex: 'totalFee',
-      hideInSearch: true,
-      render: (_, record) => `${record.settledFee + record.unsettledFee}`,
-    },
-    {
-      title: '已结稿费（万）',
-      dataIndex: 'settledFee',
-      hideInSearch: true,
-      render: (_, record) => `${record.settledFee}`,
-    },
-    {
-      title: '未结稿费（万）',
-      dataIndex: 'unsettledFee',
-      hideInSearch: true,
-      render: (_, record) => `${record.unsettledFee}`,
-    },
-    {
       title: '首单佣金',
       dataIndex: 'firstCommission',
       hideInSearch: true,
@@ -204,50 +147,9 @@ const TableList: React.FC = () => {
       dataIndex: 'followUpCommission',
       hideInSearch: true,
     },
-    { title: '初始发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
-    { title: '最新发布', dataIndex: 'publishDate2', hideInSearch: true, valueType: 'date' },
+    { title: '预计发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
+    { title: '本次稿费（万）', dataIndex: 'thisFee', hideInSearch: true },
     { title: '负责人', dataIndex: 'owner', hideInSearch: true },
-
-    {
-      title: '网址',
-      dataIndex: 'website',
-      render: (_, record) =>
-        Array.isArray(record.website)
-          ? record.website.map((c, index) => {
-              const colors = [
-                'blue',
-                'purple',
-                'magenta',
-                'cyan',
-                'volcano',
-                'orange',
-                'volcano',
-                'green',
-              ];
-              const color = colors[index % colors.length];
-              return (
-                <Tag
-                  color={color}
-                  key={c}
-                  style={{
-                    marginBottom: 4,
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-all',
-                  }}
-                >
-                  <a
-                    href={c}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: 'inherit' }}
-                  >
-                    {c}
-                  </a>
-                </Tag>
-              );
-            })
-          : record.website,
-    },
     { title: '备注', dataIndex: 'remark' },
     { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
@@ -266,23 +168,35 @@ const TableList: React.FC = () => {
         >
           <EditOutlined /> 编辑
         </a>,
-        access.canSuperAdmin && (
-          <DeleteLink
-            key="delete"
-            onOk={async () => {
-              await handleRemove([record._id!]);
-              setSelectedRows([]);
-              actionRef.current?.reloadAndRest?.();
-            }}
-          />
-        ),
+        <Button
+          key="send"
+          type="primary"
+          size="small"
+          shape="round"
+          ghost
+          style={{
+            borderColor: '#1890ff',
+            color: '#1890ff',
+            backgroundColor: 'transparent',
+            padding: '0 12px',
+            cursor: 'pointer',
+          }}
+          onClick={async () => {
+            try {
+
+              await addItem(`${API_PATH}/${record._id}/addActive`, {});
+              message.success('操作成功');
+              actionRef.current?.reload();
+            } catch (err: any) {
+              message.error(err.response?.data?.message || '操作失败');
+            }
+          }}
+        >
+          已合作
+        </Button>,
       ],
     },
   ];
-  const [summary, setSummary] = useState<{  settledFee: number; unsettledFee: number }>({
-    settledFee: 0,
-    unsettledFee: 0,
-  });
 
   useEffect(() => {
     request(`${API_PATH}/unique-filters`).then((res) => {
@@ -356,27 +270,8 @@ const TableList: React.FC = () => {
             />
           ),
         ]}
-        request={async (params, sort, filter) => {
-          const query: Record<string, any> = { ...params };
-          Object.entries(filter).forEach(([key, val]) => {
-            if (!val) return;
-            if (query[key]) {
-              query[key] = {
-                $or: [
-                  { [key]: { $regex: String(query[key]), $options: 'i' } },
-                  { [key]: { $in: val as string[] } },
-                ],
-              };
-            } else {
-              query[key] = val;
-            }
-          });
-
-          // 1. 请求表格数据
-          const res= (await queryList(API_PATH, query, sort)) as any;
-          setSummary(res.summary?.[0] ?? { settledFee: 0, unsettledFee: 0 });
-
-          return res;
+        request={async (params, sort) => {
+          return (await queryList(API_PATH, params, sort)) as any;
         }}
         columns={columns}
         rowSelection={{
@@ -430,18 +325,6 @@ const TableList: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
-      <div style={{ marginTop: 16, padding: 16, background: '#fafafa', borderRadius: 8 ,textAlign:'center'}}>
-  <span style={{ marginRight: 24 }}>
-    总稿费（万）：<b>{(summary.settledFee ?? 0) + (summary.unsettledFee ?? 0)}</b>
-  </span>
-        <span style={{ marginRight: 24 }}>
-    已结稿费（万）：<b>{summary.settledFee ?? 0}</b>
-  </span>
-        <span>
-    未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
-  </span>
-      </div>
-
     </PageContainer>
   );
 };

@@ -1,18 +1,19 @@
+import DeleteButton from '@/components/DeleteButton';
+import DeleteLink from '@/components/DeleteLink';
+import ModalFormWrapper from '@/pages/Customer/ActiveCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
+import { useLocation } from '@@/exports';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, message, Switch, Tag } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import DeleteLink from '@/components/DeleteLink';
-import DeleteButton from '@/components/DeleteButton';
 import { request, useAccess } from '@umijs/max';
-import ModalFormWrapper from '@/pages/Customer/ActiveCustomer/components/CreateOrUpdate';
+import { Button, message, Tag } from 'antd';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
-import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
-import { useLocation } from '@@/exports';
 
 type ActiveCustomer = {
+  articles: any[];
   isDuplicate: string;
   _id?: string;
   status: '待合作' | '已合作';
@@ -109,7 +110,7 @@ const TableList: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch:true,
+      hideInSearch: true,
       filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
         text: k,
         value: k,
@@ -147,108 +148,51 @@ const TableList: React.FC = () => {
     },
 
     {
-      title: '告知ChatGPT5',
-      dataIndex: 'informChatGPT5',
-      hideInSearch: true,
-      render: (_, record) => (
-        <Switch
-          checked={record.informChatGPT5}
-          onChange={async (checked) => {
-            try {
-              await updateItem(`/${API_PATH}/${record._id}`, {
-                informChatGPT5: checked,
-              });
-              actionRef.current?.reload();
-            } catch (err) {
-              message.error('更新失败');
-            }
-          }}
-        />
-      ),
-    },
-    {
-      title: 'ChatGPT回复',
-      hideInSearch: true,
-      dataIndex: 'chatGPTReplyTags',
-      render: (_, record) =>
-        record.chatGPTReplyTags?.map((tag) => (
-          <Tag color={TAG_COLOR_MAP[tag]} key={tag}>
-            {tag}
-          </Tag>
-        )),
-    },
-    {
       title: '总稿费（万）',
-      dataIndex: 'totalFee',
       hideInSearch: true,
-      render: (_, record) => `${record.settledFee + record.unsettledFee}`,
+      render: (_, record) => {
+        const total = (record.articles || []).reduce(
+          (sum: number, item: any) => sum + (item.thisFee || 0),
+          0,
+        );
+        return total.toFixed(2);
+      },
     },
     {
-      title: '已结稿费（万）',
-      dataIndex: 'settledFee',
+      title: '发文数',
       hideInSearch: true,
-      render: (_, record) => `${record.settledFee}`,
+      render: (_, record) => (record.articles ? record.articles.length : 0),
     },
+
     {
-      title: '未结稿费（万）',
-      dataIndex: 'unsettledFee',
-      hideInSearch: true,
-      render: (_, record) => `${record.unsettledFee}`,
-    },
-    {
-      title: '首单佣金',
+      title: '首单佣金（%）',
       dataIndex: 'firstCommission',
       hideInSearch: true,
     },
     {
-      title: '后续佣金',
+      title: '后续佣金（%）',
       dataIndex: 'followUpCommission',
       hideInSearch: true,
     },
-    { title: '初始发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
-    { title: '最新发布', dataIndex: 'publishDate2', hideInSearch: true, valueType: 'date' },
-    { title: '负责人', dataIndex: 'owner', hideInSearch: true },
-
     {
-      title: '网址',
-      dataIndex: 'website',
-      render: (_, record) =>
-        Array.isArray(record.website)
-          ? record.website.map((c, index) => {
-              const colors = [
-                'blue',
-                'purple',
-                'magenta',
-                'cyan',
-                'volcano',
-                'orange',
-                'volcano',
-                'green',
-              ];
-              const color = colors[index % colors.length];
-              return (
-                <Tag
-                  color={color}
-                  key={c}
-                  style={{
-                    marginBottom: 4,
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-all',
-                  }}
-                >
-                  <a
-                    href={c}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: 'inherit' }}
-                  >
-                    {c}
-                  </a>
-                </Tag>
-              );
-            })
-          : record.website,
+      title: '初始发布',
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.articles?.length) return '-';
+        return record.articles?.[0].publishDate;
+      },
     },
+    {
+      title: '最新发布',
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.articles?.length) return '-';
+        const len=record.articles?.length-1;
+        return record.articles?.[len].publishDate;
+      },
+    },
+
+    { title: '负责人', dataIndex: 'owner', hideInSearch: true },
     { title: '备注', dataIndex: 'remark' },
     { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
@@ -280,7 +224,7 @@ const TableList: React.FC = () => {
       ],
     },
   ];
-  const [summary, setSummary] = useState<{  settledFee: number; unsettledFee: number }>({
+  const [summary, setSummary] = useState<{ settledFee: number; unsettledFee: number }>({
     settledFee: 0,
     unsettledFee: 0,
   });
@@ -374,7 +318,7 @@ const TableList: React.FC = () => {
           });
 
           // 1. 请求表格数据
-          const res= (await queryList(API_PATH, query, sort)) as any;
+          const res = (await queryList(API_PATH, query, sort)) as any;
           setSummary(res.summary?.[0] ?? { settledFee: 0, unsettledFee: 0 });
           return res;
         }}
@@ -430,18 +374,25 @@ const TableList: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
-      <div style={{ marginTop: 16, padding: 16, background: '#fafafa', borderRadius: 8 ,textAlign:'center'}}>
-  <span style={{ marginRight: 24 }}>
-    总稿费（万）：<b>{(summary.settledFee ?? 0) + (summary.unsettledFee ?? 0)}</b>
-  </span>
+      <div
+        style={{
+          marginTop: 16,
+          padding: 16,
+          background: '#fafafa',
+          borderRadius: 8,
+          textAlign: 'center',
+        }}
+      >
         <span style={{ marginRight: 24 }}>
-    已结稿费（万）：<b>{summary.settledFee ?? 0}</b>
-  </span>
+          总稿费（万）：<b>{(summary.settledFee ?? 0) + (summary.unsettledFee ?? 0)}</b>
+        </span>
+        <span style={{ marginRight: 24 }}>
+          已结稿费（万）：<b>{summary.settledFee ?? 0}</b>
+        </span>
         <span>
-    未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
-  </span>
+          未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
+        </span>
       </div>
-
     </PageContainer>
   );
 };

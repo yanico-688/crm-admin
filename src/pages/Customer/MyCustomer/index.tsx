@@ -1,4 +1,10 @@
+import DeleteButton from '@/components/DeleteButton';
+import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
+import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
+import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
 import { addItem, getList, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { filterBoxStyle, filterDivStyle } from '@/services/ant-design-pro/yanico';
+import { useLocation } from '@@/exports';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   ActionType,
@@ -7,17 +13,10 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { Badge, Button, Checkbox, message, Tag } from 'antd';
-import React, { useEffect, useRef, useState } from 'react';
-import DeleteLink from '@/components/DeleteLink';
-import DeleteButton from '@/components/DeleteButton';
 import { useAccess } from '@umijs/max';
-import CustomerModalForm from '@/pages/Customer/MyCustomer/components/CreateOrUpdate';
-import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
-import { useLocation } from '@@/exports';
-import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
-import { filterBoxStyle, filterDivStyle } from '@/services/ant-design-pro/yanico';
+import { Badge, Button, Checkbox, message, Tag } from 'antd';
 import dayjs from 'dayjs';
+import React, { useEffect, useRef, useState } from 'react';
 
 export type MyCustomer = {
   latestEmailSendTime?: Date;
@@ -117,17 +116,15 @@ const TableList: React.FC = () => {
       actionRef.current.reload();
     }
   }, [location.pathname]);
-  const [ownerFilters, setOwnerFilters] = useState<{text: string, value: string}[]>([]);
+  const [ownerFilters, setOwnerFilters] = useState<{ text: string; value: string }[]>([]);
 
   useEffect(() => {
-    getList('/myCustomers/owners').then(res => {
+    getList('/myCustomers/owners').then((res) => {
       if (res.success) {
         setOwnerFilters(res.data.map((o: string) => ({ text: o, value: o })));
       }
     });
   }, []);
-
-
 
   const baseColumns: ProColumns<MyCustomer>[] = [
     { title: '姓名', dataIndex: 'name' },
@@ -171,7 +168,6 @@ const TableList: React.FC = () => {
           </div>
         );
       },
-
     },
 
     {
@@ -182,7 +178,13 @@ const TableList: React.FC = () => {
         return <Tag color={status.color}>{status.text}</Tag>;
       },
     },
-    { title: '负责人员', dataIndex: 'owner', hideInSearch: true ,filters:ownerFilters,filterMode: 'menu' },
+    {
+      title: '负责人员',
+      dataIndex: 'owner',
+      hideInSearch: true,
+      filters: ownerFilters,
+      filterMode: 'menu',
+    },
     {
       title: '客户分类',
       dataIndex: 'cusOpt',
@@ -190,14 +192,14 @@ const TableList: React.FC = () => {
       hideInTable: true,
     },
     { title: '备注', dataIndex: 'remark' },
-    { title: '修改时间', dataIndex: 'updatedAt',valueType:'dateTime',sorter:true },
+    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', sorter: true },
     {
       title: '操作',
+      width: 220,
       dataIndex: 'option',
       valueType: 'option',
       fixed: 'right',
       render: (_, record) => {
-
         const today = new Date().setHours(0, 0, 0, 0);
         const lastSend = record.latestEmailSendTime
           ? new Date(record.latestEmailSendTime).setHours(0, 0, 0, 0)
@@ -205,20 +207,15 @@ const TableList: React.FC = () => {
         const disabled = lastSend && lastSend === today;
 
         return [
-
-
-        <a key="update" onClick={() => {
-            handleUpdateModalOpen(true);
-            setCurrentRow(record);
-          }}><EditOutlined /> 编辑</a>,
-        access.canSuperAdmin && (
-          <DeleteLink key="delete" onOk={async () => {
-              await handleRemove([record._id!]);
-              setSelectedRows([]);
-              actionRef.current?.reloadAndRest?.();
+          <a
+            key="update"
+            onClick={() => {
+              handleUpdateModalOpen(true);
+              setCurrentRow(record);
             }}
-          />
-        ),
+          >
+            <EditOutlined /> 编辑
+          </a>,
           <Button
             key="send"
             type="primary"
@@ -250,8 +247,34 @@ const TableList: React.FC = () => {
             }}
           >
             发送
-          </Button>
-      ]}
+          </Button>,
+          <Button
+            key="send"
+            type="primary"
+            size="small"
+            shape="round"
+            ghost
+            style={{
+              borderColor: '#1890ff',
+              color: '#1890ff',
+              backgroundColor: 'transparent',
+              padding: '0 12px',
+              cursor: 'pointer',
+            }}
+            onClick={async () => {
+              try {
+                await addItem(`/myCustomers/${record._id}/addPending`, {});
+                message.success('操作成功');
+                actionRef.current?.reload();
+              } catch (err: any) {
+                message.error(err.response?.data?.message || '操作失败');
+              }
+            }}
+          >
+            待合作
+          </Button>,
+        ];
+      },
     },
   ];
 
@@ -375,7 +398,6 @@ const TableList: React.FC = () => {
 
             return (await queryList(API_PATH, query)) as any;
           }}
-
           columns={baseColumns}
           rowSelection={{
             onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
