@@ -359,7 +359,7 @@ const TableList: React.FC = () => {
           scroll={{ x: 1200 }}
           search={{ labelWidth: 120, collapsed: false }}
           toolBarRender={() => [
-            <Button type="primary" key="" onClick={() => setModalOpen(true)}>
+            <Button   key="" onClick={() => setModalOpen(true)}>
               领取客户
             </Button>,
             access.canAdmin && (

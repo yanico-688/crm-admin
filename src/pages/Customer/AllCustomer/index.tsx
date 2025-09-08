@@ -1,7 +1,7 @@
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, Popconfirm, Tag } from 'antd';
+import { Button, message, Popconfirm, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import CustomerForm from './components/CustomerForm';
 
@@ -157,17 +157,24 @@ const AllCustomersPage: React.FC = () => {
         onOpenChange={setModalOpen}
         values={currentRow}
         onFinish={async (val: any) => {
-          const success = val._id
-            ? await updateItem(`${API_PATH}/${val._id}`, val)
-            : await addItem(API_PATH, { ...val });
-          if (success) {
+          const hide = message.loading('操作中...');
+          try {
+            const success = val._id
+              ? await updateItem(`${API_PATH}/${val._id}`, val)
+              : await addItem(API_PATH, { ...val });
+            hide();
             setModalOpen(false);
             actionRef.current?.reload();
+            message.success('操作成功');
+            return true;
+          } catch (error: any) {
+            hide();
+            message.error(error?.response?.data?.message ?? '添加失败，请重试！');
+            return false;
           }
         }}
       />
     </PageContainer>
   );
 };
-
 export default AllCustomersPage;
