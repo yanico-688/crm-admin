@@ -37,7 +37,7 @@ const API_PATH = '/myCustomers';
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   谈判: { color: 'orange', text: '谈判' },
   未回复: { color: 'pink', text: '未回复' },
-  已回复: { color: 'purple', text: '已回复' },
+  未发送: { color: 'purple', text: '未发送' },
 };
 
 // 添加
@@ -101,13 +101,13 @@ const TableList: React.FC = () => {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
     谈判: 0,
     未回复: 0,
-    已回复: 0,
+    未发送: 0,
   });
 
   // 初始化统计数量
   useEffect(() => {
     getList(`${API_PATH}/statusCounts`).then((res) => {
-      setStatusCounts(res.data as any); // 后端返回 { 谈判: 10, 未回复: 20, 已回复: 5 }
+      setStatusCounts(res.data as any);
     });
   }, []);
   // 监听路由变化

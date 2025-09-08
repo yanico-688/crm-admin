@@ -1,17 +1,11 @@
-import {
-  ProForm,
-  ProFormDatePicker,
-  ProFormSelect,
-  ProFormText,
-  ProFormTextArea,
-} from '@ant-design/pro-components';
+import { ProForm, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import { Form, Input } from 'antd';
 import React from 'react';
 
 const STATUS_OPTIONS = [
   { label: '谈判', value: '谈判' },
   { label: '未回复', value: '未回复' },
-  { label: '已回复', value: '已回复' },
+  { label: '未发送', value: '未发送' },
 ];
 const CUS_OPTIONS = [
   { label: '待合作', value: 1 },
@@ -48,7 +42,7 @@ const BasicForm: React.FC<Props> = () => {
           label="回复状态"
           width="md"
           options={STATUS_OPTIONS}
-          initialValue={'未回复'}
+          initialValue={'未发送'}
         />
       </ProForm.Group>
 
