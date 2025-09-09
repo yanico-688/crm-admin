@@ -198,7 +198,19 @@ const TableList: React.FC = () => {
       hideInTable: true,
     },
     { title: '备注', dataIndex: 'remark' },
-    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', sorter: true },
+    {
+      title: '修改日期',
+      dataIndex: 'updatedAt',
+      valueType: 'date', // 搜索时是“日期”
+      hideInTable: true, // 不在表格里显示
+    },
+    {
+      title: '修改时间',
+      dataIndex: 'updatedAt',
+      valueType: 'dateTime', // 表格展示“日期 + 时间”
+      sorter: true,
+      hideInSearch: true, // 不在搜索栏里显示
+    },
     {
       title: '操作',
       width: 220,
@@ -359,7 +371,7 @@ const TableList: React.FC = () => {
           scroll={{ x: 1200 }}
           search={{ labelWidth: 120, collapsed: false }}
           toolBarRender={() => [
-            <Button   key="" onClick={() => setModalOpen(true)}>
+            <Button key="" onClick={() => setModalOpen(true)}>
               领取客户
             </Button>,
             access.canAdmin && (
@@ -384,7 +396,7 @@ const TableList: React.FC = () => {
           ]}
           request={async (params, sort, filter) => {
             const query: Record<string, any> = {
-              ...params,                                // ✅ 包含 current / pageSize
+              ...params, // ✅ 包含 current / pageSize
             };
             // ✅ 状态筛选
             if (statusFilter.length > 0) {
