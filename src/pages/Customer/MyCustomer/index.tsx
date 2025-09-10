@@ -159,18 +159,9 @@ const TableList: React.FC = () => {
       title: '联系方式',
       dataIndex: 'contact',
       copyable: true,
+      sorter: true,
     },
-    {
-      title: '重复',
-      dataIndex: 'isDup',
-      hideInSearch: true, // 不用在搜索里
-      render: (_, record) =>
-        record.isDup ? (
-          <Tag color="red">重复</Tag>
-        ) : (
-          <Tag color="green">唯一</Tag>
-        ),
-    },
+
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
@@ -185,6 +176,7 @@ const TableList: React.FC = () => {
       dataIndex: 'latestEmailSendTime',
       valueType: 'dateTime',
       hideInSearch: true,
+      sorter: true,
     },
 
     {
