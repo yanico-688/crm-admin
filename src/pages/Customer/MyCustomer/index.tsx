@@ -19,6 +19,7 @@ import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 
 export type MyCustomer = {
+  isDup: boolean;
   latestEmailSendTime?: Date;
   _id?: string;
   name: string;
@@ -153,13 +154,23 @@ const TableList: React.FC = () => {
       valueType: 'index',
     },
 
-    { title: '姓名', dataIndex: 'name' },
+    // { title: '姓名', dataIndex: 'name' },
     {
       title: '联系方式',
       dataIndex: 'contact',
       copyable: true,
     },
-
+    {
+      title: '重复',
+      dataIndex: 'isDup',
+      hideInSearch: true, // 不用在搜索里
+      render: (_, record) =>
+        record.isDup ? (
+          <Tag color="red">重复</Tag>
+        ) : (
+          <Tag color="green">唯一</Tag>
+        ),
+    },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
