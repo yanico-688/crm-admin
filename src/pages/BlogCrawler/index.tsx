@@ -1,10 +1,11 @@
 import { addItem, queryList } from '@/services/ant-design-pro/api';
 import { useAccess } from '@@/exports';
-import { type ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
+import { type ActionType, FooterToolbar, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, DatePicker, Input, InputNumber, message, Space } from 'antd';
 import React, { useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import CrawlLogViewer from '@/pages/BlogCrawler/CrawlLogViewer';
+import { MyCustomer } from '@/pages/Customer/MyCustomer';
 const { RangePicker } = DatePicker;
 type BlogData = {
   _id: string;
@@ -21,6 +22,7 @@ const BlogCrawler: React.FC = () => {
   const [stopping, setStopping] = useState(false); // 停止中状态
   const [startPage, setStartPage] = useState<number>(1); // 起始页
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
   const actionRef = useRef<ActionType>();
   const access = useAccess();
 
@@ -107,7 +109,27 @@ const BlogCrawler: React.FC = () => {
     { title: '爬取时间', dataIndex: 'createdAt', valueType: 'dateTime' },
     { title: '备注', dataIndex: 'remark' },
   ];
-
+// 新增方法
+  const handleAddToMaster = async () => {
+    if (selectedRowsState.length === 0) {
+      message.warning('请先选择数据');
+      return;
+    }
+    try {
+      // 只传 ids
+      const ids = selectedRowsState.map((row) => row._id);
+      const res = await addItem('/allCustomers/addToAll',  { ids });
+      if (res.success) {
+        message.success(res.message || '已加入总表');
+        setSelectedRows([]); // 清空选择
+        actionRef.current?.reload?.(); // 刷新表格
+      } else {
+        message.error(res.message || '加入总表失败');
+      }
+    } catch (e: any) {
+      message.error(e.message || '请求出错');
+    }
+  };
   return (
     <PageContainer>
       {/* 🔥 实时日志窗口 */}
@@ -121,6 +143,10 @@ const BlogCrawler: React.FC = () => {
         request={async (params) => {
           return (await queryList('/allCustomers/getBlogs', params)) as any; // 🔑 从后端取数据
         }}
+        rowSelection={{
+          onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
+        }}
+
         toolBarRender={() => [
           access.canAdmin && (
             <Space key="tools">
@@ -131,14 +157,14 @@ const BlogCrawler: React.FC = () => {
                 onChange={(e) => setKeyword(e.target.value)}
                 style={{ width: 200 }}
               />
-              起始页:
+              起始页数:
               <InputNumber
                 min={1}
                 value={startPage}
                 onChange={(val) => setStartPage(val || 1)}
                 style={{ width: 100 }}
               />
-              爬取页数:
+              结束页数:
               <InputNumber
                 min={1}
                 value={page}
@@ -162,6 +188,21 @@ const BlogCrawler: React.FC = () => {
         ]}
       />
 
+      {selectedRowsState?.length > 0 && (
+        <FooterToolbar
+          extra={
+            <div>
+              已选择 <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a> 项
+            </div>
+          }
+        >
+          <Space>
+            <Button type="primary" onClick={handleAddToMaster}>
+              加入总表
+            </Button>
+          </Space>
+        </FooterToolbar>
+      )}
     </PageContainer>
   );
 };

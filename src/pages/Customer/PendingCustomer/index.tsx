@@ -1,13 +1,13 @@
 import DeleteButton from '@/components/DeleteButton';
 import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
-import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { request, useAccess, useLocation } from '@umijs/max';
-import { Button, message, Tag } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useAccess, useLocation } from '@umijs/max';
+import { Button, message, Modal, Tag } from 'antd';
+import dayjs from 'dayjs';
+import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
 
 type PendingCustomer = {
@@ -29,10 +29,8 @@ type PendingCustomer = {
 };
 
 const STATUS_COLOR_MAP: Record<string, string> = {
-  待合作: 'default',
-  已合作: 'green',
+  待合作: 'green',
   确认放弃: 'red',
-  长期合作: 'blue',
 };
 const API_PATH = '/pendingCustomer';
 
@@ -87,7 +85,6 @@ const TableList: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<PendingCustomer>();
   const [selectedRows, setSelectedRows] = useState<PendingCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
-  const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
   const location = useLocation();
 
   // 监听路由变化
@@ -96,15 +93,31 @@ const TableList: React.FC = () => {
       actionRef.current.reload();
     }
   }, [location.pathname]);
+  const handleBatchAbandon = async () => {
+    if (selectedRows.length === 0) {
+      message.warning('请先选择数据');
+      return;
+    }
+
+    try {
+      const ids = selectedRows.map((row) => row._id);
+      const res = await addItem(`${API_PATH}/batchAbandonPending`, { ids });
+      if (res.success) {
+        message.success(res.message || '操作成功');
+        setSelectedRows([]); // 清空选择
+        actionRef.current?.reload?.(); // 刷新表格
+      } else {
+        message.error(res.message || '操作失败');
+      }
+    } catch (e: any) {
+      message.error(e.message || '请求出错');
+    }
+  };
   const baseColumns: ProColumns<PendingCustomer>[] = [
     {
       title: '状态',
       dataIndex: 'status',
       hideInSearch: true,
-      filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
-        text: k,
-        value: k,
-      })),
       render: (_, record) => (
         <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
       ),
@@ -141,18 +154,48 @@ const TableList: React.FC = () => {
       title: '首单佣金',
       dataIndex: 'firstCommission',
       hideInSearch: true,
+      sorter: true,
     },
     {
       title: '后续佣金',
       dataIndex: 'followUpCommission',
       hideInSearch: true,
+      sorter: true,
     },
-    { title: '预计发布', dataIndex: 'publishDate', hideInSearch: true, valueType: 'date' },
-    { title: '本次稿费（万）', dataIndex: 'thisFee', hideInSearch: true },
+    {
+      title: '预计发布',
+      dataIndex: 'publishDate',
+      hideInSearch: true,
+      valueType: 'date',
+      sorter: true,
+      render: (_, record) => {
+        if (!record.publishDate) return '-';
+        const isExpired = dayjs(record.publishDate).isBefore(dayjs(), 'day');
+        return (
+          <span style={{ color: isExpired ? 'red' : 'inherit' }}>
+            {dayjs(record.publishDate).format('YYYY-MM-DD')}
+            {isExpired && '（已过期）'}
+          </span>
+        );
+      },
+    },
+    { title: '本次稿费（万）', dataIndex: 'thisFee', hideInSearch: true, sorter: true },
     { title: '负责人', dataIndex: 'owner', hideInSearch: true },
     { title: '备注', dataIndex: 'remark' },
-    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
-    { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
+    {
+      title: '修改时间',
+      dataIndex: 'updatedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
     {
       title: '操作',
       dataIndex: 'option',
@@ -183,7 +226,6 @@ const TableList: React.FC = () => {
           }}
           onClick={async () => {
             try {
-
               await addItem(`${API_PATH}/${record._id}/addActive`, {});
               message.success('操作成功');
               actionRef.current?.reload();
@@ -197,47 +239,6 @@ const TableList: React.FC = () => {
       ],
     },
   ];
-
-  useEffect(() => {
-    request(`${API_PATH}/unique-filters`).then((res) => {
-      if (res.success) setUniqueFilters(res.data);
-    });
-  }, []);
-  // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
-
-  const columnsWithStatic = useMemo(
-    () => addExcelFilters<PendingCustomer>(baseColumns, uniqueFilters),
-    [baseColumns, uniqueFilters],
-  );
-
-  // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
-
-  const HEAVY_FIELDS = ['website', 'remark', 'contact']; // 例如：候选很多的字段
-  const columns: ProColumns<PendingCustomer>[] = useMemo(
-    () =>
-      columnsWithStatic.map((c) => {
-        if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
-        if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
-
-        const cc: ProColumns<PendingCustomer> = { ...c };
-        delete (cc as any).filters;
-        delete (cc as any).filterSearch;
-        cc.filterMultiple = true; // 保持多选
-        cc.filterDropdown = remoteFilterDropdown(
-          c.dataIndex,
-          `${API_PATH}/unique-filter-values`,
-          50,
-        );
-        return cc;
-      }),
-    [columnsWithStatic],
-  );
-
-  useEffect(() => {
-    request(`${API_PATH}/unique-filters`).then((res) => {
-      if (res.success) setUniqueFilters(res.data);
-    });
-  }, []);
 
   return (
     <PageContainer>
@@ -267,6 +268,24 @@ const TableList: React.FC = () => {
               批量导入
             </Button>
           ),
+          selectedRows?.length > 0 && (
+            <Button
+              key=""
+              danger
+              onClick={() => {
+                Modal.confirm({
+                  title: '确认操作',
+                  content: `确定要放弃这 ${selectedRows.length} 条记录吗？`,
+                  okText: '确认放弃',
+                  cancelText: '取消',
+                  okType: 'danger',
+                  onOk: () => handleBatchAbandon(),
+                });
+              }}
+            >
+              批量放弃
+            </Button>
+          ),
           selectedRows.length > 0 && access.canSuperAdmin && (
             <DeleteButton
               onOk={async () => {
@@ -278,9 +297,19 @@ const TableList: React.FC = () => {
           ),
         ]}
         request={async (params, sort) => {
-          return (await queryList(API_PATH, params, sort)) as any;
+          const query: Record<string, any> = {
+            ...params, // ✅ 包含 current / pageSize
+          };
+          // ✅ 排序
+          if (sort && Object.keys(sort).length > 0) {
+            const [field, order] = Object.entries(sort)[0];
+            query.sortField = field;
+            query.sortOrder = order; // ascend / descend
+          }
+
+          return (await queryList(API_PATH, query)) as any;
         }}
-        columns={columns}
+        columns={baseColumns}
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}

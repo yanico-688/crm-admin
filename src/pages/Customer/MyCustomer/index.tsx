@@ -14,7 +14,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Badge, Button, Checkbox, message, Tag } from 'antd';
+import { Badge, Button, Checkbox, message, Modal, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -125,6 +125,26 @@ const TableList: React.FC = () => {
       }
     });
   }, []);
+  const handleBatchAbandon = async () => {
+    if (selectedRowsState.length === 0) {
+      message.warning('请先选择数据');
+      return;
+    }
+
+    try {
+      const ids = selectedRowsState.map((row) => row._id);
+      const res = await addItem('/myCustomers/batchAbandon', { ids });
+      if (res.success) {
+        message.success(res.message || '操作成功');
+        setSelectedRows([]); // 清空选择
+        actionRef.current?.reload?.(); // 刷新表格
+      } else {
+        message.error(res.message || '操作失败');
+      }
+    } catch (e: any) {
+      message.error(e.message || '请求出错');
+    }
+  };
 
   const baseColumns: ProColumns<MyCustomer>[] = [
     {
@@ -374,14 +394,27 @@ const TableList: React.FC = () => {
             <Button key="" onClick={() => setModalOpen(true)}>
               领取客户
             </Button>,
-            access.canAdmin && (
-              <Button type="primary" key="primary" onClick={() => handleModalOpen(true)}>
-                <PlusOutlined /> 新建
-              </Button>
-            ),
+            <Button type="primary" key="primary" onClick={() => handleModalOpen(true)}>
+              <PlusOutlined /> 新建
+            </Button>,
+
             access.canAdmin && (
               <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
                 批量导入
+              </Button>
+            ),
+            selectedRowsState?.length > 0 && (
+              <Button key="" danger     onClick={() => {
+                Modal.confirm({
+                  title: '确认操作',
+                  content: `确定要放弃这 ${selectedRowsState.length} 条记录吗？`,
+                  okText: '确认放弃',
+                  cancelText: '取消',
+                  okType: 'danger',
+                  onOk: () => handleBatchAbandon(),
+                });
+              }}>
+                批量放弃
               </Button>
             ),
             selectedRowsState?.length > 0 && access.canSuperAdmin && (

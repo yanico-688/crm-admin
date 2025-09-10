@@ -69,7 +69,22 @@ const AllCustomersPage: React.FC = () => {
       },
     },
     { title: '标签', dataIndex: 'tags' },
+    { title: '来源', dataIndex: 'from' },
     { title: '备注', dataIndex: 'remark', ellipsis: true },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
+    {
+      title: '修改时间',
+      dataIndex: 'updatedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
     {
       title: '操作',
       valueType: 'option',
@@ -106,22 +121,17 @@ const AllCustomersPage: React.FC = () => {
         rowSelection={{
           onChange: (_, selected) => setSelectedRows(selected),
         }}
-        request={async (params, sort, filter) => {
-          const query: Record<string, any> = { ...params };
-          Object.entries(filter).forEach(([key, val]) => {
-            if (!val) return;
-            if (query[key]) {
-              query[key] = {
-                $or: [
-                  { [key]: { $regex: String(query[key]), $options: 'i' } },
-                  { [key]: { $in: val as string[] } },
-                ],
-              };
-            } else {
-              query[key] = val;
-            }
-          });
-          return (await queryList(API_PATH, query, sort)) as any;
+        request={async (params, sort) => {
+          const query: Record<string, any> = {
+            ...params, // ✅ 包含 current / pageSize
+          };
+          // ✅ 排序
+          if (sort && Object.keys(sort).length > 0) {
+            const [field, order] = Object.entries(sort)[0];
+            query.sortField = field;
+            query.sortOrder = order; // ascend / descend
+          }
+          return (await queryList(API_PATH, query)) as any;
         }}
         toolBarRender={() => [
           <Button
