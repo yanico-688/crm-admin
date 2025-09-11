@@ -44,6 +44,14 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
           width="md"
           rules={[{ required: true, message: '请输入平台网址' }]}
         />
+
+        <ProFormSelect
+          name="blockedOwners"
+          label="联系方式"
+          mode="tags"
+          width="md"
+          placeholder="可输入多个，用回车分隔"
+        />
         <ProFormSelect
           name="status"
           label="状态"

@@ -5,7 +5,7 @@ import { EditOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { useAccess, useLocation } from '@umijs/max';
-import { Button, message, Modal, Tag } from 'antd';
+import { Button, message, Modal, Popconfirm, Tag } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
@@ -125,7 +125,8 @@ const TableList: React.FC = () => {
     },
     {
       title: '联系方式',
-      dataIndex: 'contact',sorter: true,
+      dataIndex: 'contact',
+      sorter: true,
       width: 200,
       render: (_, record) =>
         Array.isArray(record.contact)
@@ -217,20 +218,12 @@ const TableList: React.FC = () => {
         >
           <EditOutlined /> 编辑
         </a>,
-        <Button
-          key="send"
-          type="primary"
-          size="small"
-          shape="round"
-          ghost
-          style={{
-            borderColor: '#1890ff',
-            color: '#1890ff',
-            backgroundColor: 'transparent',
-            padding: '0 12px',
-            cursor: 'pointer',
-          }}
-          onClick={async () => {
+        <Popconfirm
+          title="确定要将该客户标记为待合作吗？"
+          okText="确认"
+          key="confirm"
+          cancelText="取消"
+          onConfirm={async () => {
             try {
               await addItem(`${API_PATH}/${record._id}/addActive`, {});
               message.success('操作成功');
@@ -240,8 +233,23 @@ const TableList: React.FC = () => {
             }
           }}
         >
-          已合作
-        </Button>,
+          <Button
+            key="send"
+            type="primary"
+            size="small"
+            shape="round"
+            ghost
+            style={{
+              borderColor: '#1890ff',
+              color: '#1890ff',
+              backgroundColor: 'transparent',
+              padding: '0 12px',
+              cursor: 'pointer',
+            }}
+          >
+            已合作
+          </Button>
+        </Popconfirm>,
       ],
     },
   ];
