@@ -1,7 +1,7 @@
 import DeleteButton from '@/components/DeleteButton';
 import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { useAccess, useLocation } from '@umijs/max';
@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
 
 type PendingCustomer = {
+  isDup: boolean;
   isDuplicate: string;
   _id?: string;
   status: '待合作' | '已合作';
@@ -124,7 +125,7 @@ const TableList: React.FC = () => {
     },
     {
       title: '联系方式',
-      dataIndex: 'contact',
+      dataIndex: 'contact',sorter: true,
       width: 200,
       render: (_, record) =>
         Array.isArray(record.contact)
@@ -143,13 +144,18 @@ const TableList: React.FC = () => {
               return (
                 <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
                   <Tag color={color}>{c}</Tag>
-                  {record.isDuplicate && <Tag color="red">重复！</Tag>}
                 </span>
               );
             })
           : record.contact,
     },
-
+    {
+      title: '重复',
+      dataIndex: 'isDup',
+      hideInSearch: true, // 不用在搜索里
+      render: (_, record) =>
+        record.isDup ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
+    },
     {
       title: '首单佣金',
       dataIndex: 'firstCommission',
@@ -255,19 +261,19 @@ const TableList: React.FC = () => {
         scroll={{ x: 1200 }}
         search={{ labelWidth: 120, collapsed: false }}
         toolBarRender={() => [
-          <Button
-            type="primary"
-            key=""
-            onClick={() => setCreateModalOpen(true)}
-            icon={<PlusOutlined />}
-          >
-            新建
-          </Button>,
-          access.canAdmin && (
-            <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
-              批量导入
-            </Button>
-          ),
+          // <Button
+          //   type="primary"
+          //   key=""
+          //   onClick={() => setCreateModalOpen(true)}
+          //   icon={<PlusOutlined />}
+          // >
+          //   新建
+          // </Button>,
+          // access.canAdmin && (
+          //   <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
+          //     批量导入
+          //   </Button>
+          // ),
           selectedRows?.length > 0 && (
             <Button
               key=""

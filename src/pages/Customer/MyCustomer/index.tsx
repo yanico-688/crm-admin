@@ -19,6 +19,9 @@ import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 
 export type MyCustomer = {
+  isDupPending: boolean;
+  isDupActive: boolean;
+  isDup2: boolean;
   isDup: boolean;
   latestEmailSendTime?: Date;
   _id?: string;
@@ -161,7 +164,19 @@ const TableList: React.FC = () => {
       copyable: true,
       sorter: true,
     },
-
+    // {
+    //   title: '重复',
+    //   dataIndex: 'isDupPending',
+    //   hideInSearch: true, // 不用在搜索里
+    //   render: (_, record) =>
+    //     record.isDupPending ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
+    // },    {
+    //   title: '重复2',
+    //   dataIndex: 'isDupActive',
+    //   hideInSearch: true, // 不用在搜索里
+    //   render: (_, record) =>
+    //     record.isDupActive ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
+    // },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',

@@ -7,10 +7,6 @@ import {
 } from '@ant-design/pro-components';
 import React from 'react';
 
-const STATUS_OPTIONS = [
-  { label: '已合作', value: '已合作' },
-  { label: '待合作', value: '待合作' },
-];
 
 interface Props {
   newRecord?: boolean; // 新建时传 true
@@ -30,20 +26,7 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
         />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormSelect
-          name="status"
-          label="状态"
-          options={STATUS_OPTIONS}
-          rules={[{ required: true, message: '请选择状态' }]}
-          width="md"
-        />
         <ProFormDatePicker name="publishDate" label="预计发布" width="md" />
-      </ProForm.Group>
-      <ProForm.Group>
-        <ProFormDigit name="firstCommission" label="首单佣金" min={0} width="md" />
-        <ProFormDigit name="followUpCommission" label="后续佣金" min={0} width="md" />
-      </ProForm.Group>
-      <ProForm.Group>
         <ProFormDigit
           name="thisFee"
           label="本次稿费"
@@ -51,6 +34,13 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
           width="md"
           fieldProps={{ precision: 2, step: 0.01 }}
         />
+      </ProForm.Group>
+      <ProForm.Group>
+        <ProFormDigit name="firstCommission" label="首单佣金" min={0} width="md" />
+        <ProFormDigit name="followUpCommission" label="后续佣金" min={0} width="md" />
+      </ProForm.Group>
+      <ProForm.Group>
+
         <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
     </>

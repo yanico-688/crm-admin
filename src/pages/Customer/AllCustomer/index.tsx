@@ -1,7 +1,7 @@
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal, Popconfirm, Tag } from 'antd';
+import { Button, message, Popconfirm, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import CustomerForm from './components/CustomerForm';
 
@@ -26,17 +26,18 @@ const AllCustomersPage: React.FC = () => {
     }
   }, [location.pathname]);
   const columns: ProColumns<any>[] = [
-    { title: '联系方式', dataIndex: 'contact', copyable: true, sorter: true },
-    {
-      title: '重复',
-      dataIndex: 'isDup',
-      hideInSearch: true, // 不用在搜索里
-      render: (_, record) =>
-        record.isDup ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
-    },
+    { title: '联系方式', dataIndex: 'contact', copyable: true, sorter: true, width: 180 },
+    // {
+    //   title: '重复',
+    //   dataIndex: 'isDup',
+    //   hideInSearch: true, // 不用在搜索里
+    //   render: (_, record) =>
+    //     record.isDup ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
+    // },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
+      width: 150,
       render: (_, record) => (
         <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
           {record.platformUrl}
@@ -46,11 +47,6 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'status',
-      hideInSearch: true,
-      filters: Object.keys(STATUS_MAP).map((key) => ({
-        text: STATUS_MAP[key].text,
-        value: key,
-      })),
       render: (_, record) => {
         const statusItem = STATUS_MAP[record.status] || {};
         return <Tag color={statusItem.color}>{statusItem.text}</Tag>;
@@ -77,7 +73,7 @@ const AllCustomersPage: React.FC = () => {
     },
     { title: '标签', dataIndex: 'tags' },
     { title: '来源', dataIndex: 'from' },
-    { title: '备注', dataIndex: 'remark', ellipsis: true },
+    { title: '备注', dataIndex: 'remark', width: 100 },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
@@ -141,32 +137,32 @@ const AllCustomersPage: React.FC = () => {
           return (await queryList(API_PATH, query)) as any;
         }}
         toolBarRender={() => [
-          <Button
-            key="flash"
-            type="primary"
-            onClick={() => {
-              Modal.confirm({
-                title: '同步确认',
-                content: '确定要从 MyCustomer、PendingCustomer、ActiveCustomer 同步数据到总表吗？',
-                okText: '确认同步',
-                cancelText: '取消',
-                onOk: async () => {
-                  try {
-                    const res = await addItem(`${API_PATH}/syncFromOthers`, {});
-                    if (res.success) {
-                      message.success(res.message || '同步成功');
-                    } else {
-                      message.error(res.message || '同步失败');
-                    }
-                  } catch (e: any) {
-                    message.error(e.message || '请求出错');
-                  }
-                },
-              });
-            }}
-          >
-            同步数据
-          </Button>,
+          // <Button
+          //   key="flash"
+          //   type="primary"
+          //   onClick={() => {
+          //     Modal.confirm({
+          //       title: '同步确认',
+          //       content: '确定要从 MyCustomer、PendingCustomer、ActiveCustomer 同步数据到总表吗？',
+          //       okText: '确认同步',
+          //       cancelText: '取消',
+          //       onOk: async () => {
+          //         try {
+          //           const res = await addItem(`${API_PATH}/syncFromOthers`, {});
+          //           if (res.success) {
+          //             message.success(res.message || '同步成功');
+          //           } else {
+          //             message.error(res.message || '同步失败');
+          //           }
+          //         } catch (e: any) {
+          //           message.error(e.message || '请求出错');
+          //         }
+          //       },
+          //     });
+          //   }}
+          // >
+          //   同步数据
+          // </Button>,
           <Button
             key="create"
             type="primary"
