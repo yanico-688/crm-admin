@@ -192,7 +192,7 @@ const TableList: React.FC = () => {
       },
     },
 
-    { title: '负责人', dataIndex: 'owner', hideInSearch: true },
+    { title: '负责人', dataIndex: 'owner'  },
     { title: '备注', dataIndex: 'remark' },
     { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },

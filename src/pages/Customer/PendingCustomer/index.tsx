@@ -187,7 +187,7 @@ const TableList: React.FC = () => {
       },
     },
     { title: '本次稿费（万）', dataIndex: 'thisFee', hideInSearch: true, sorter: true },
-    { title: '负责人', dataIndex: 'owner', hideInSearch: true },
+    { title: '负责人', dataIndex: 'owner'  },
     { title: '备注', dataIndex: 'remark' },
     {
       title: '创建时间',

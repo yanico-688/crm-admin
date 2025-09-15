@@ -33,7 +33,7 @@ const columns: ProColumns<PotentialCustomer>[] = [
       return <Tag color={status.color}>{status.text}</Tag>;
     },
   },
-  { title: '负责人员', dataIndex: 'owner' },
+  { title: '负责人', dataIndex: 'owner' },
   { title: '备注', dataIndex: 'remark' },
   {
     title: '验证状态',

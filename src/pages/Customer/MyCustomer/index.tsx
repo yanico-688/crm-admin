@@ -225,7 +225,6 @@ const TableList: React.FC = () => {
     {
       title: '负责人员',
       dataIndex: 'owner',
-      hideInSearch: true,
       filters: ownerFilters,
       filterMode: 'menu',
     },
