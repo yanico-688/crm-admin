@@ -2,16 +2,15 @@ import DeleteButton from '@/components/DeleteButton';
 import DeleteLink from '@/components/DeleteLink';
 import ModalFormWrapper from '@/pages/Customer/ActiveCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
-import { addExcelFilters, remoteFilterDropdown } from '@/utils/tagsFilter';
 import { useLocation } from '@@/exports';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { CopyOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
-import { request, useAccess } from '@umijs/max';
+import { useAccess } from '@umijs/max';
 import { Button, message, Tag } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
-
+import copy from 'copy-to-clipboard';
 type ActiveCustomer = {
   articles: any[];
   isDuplicate: string;
@@ -37,13 +36,7 @@ const STATUS_COLOR_MAP: Record<string, string> = {
   确认放弃: 'red',
   长期合作: 'blue',
 };
-const TAG_COLOR_MAP: Record<string, string> = {
-  放弃: 'default',
-  加评论: 'purple',
-  拒绝: 'red',
-  发文章: 'blue',
-  已完成: 'green',
-};
+
 const API_PATH = '/activeCustomer';
 
 const handleAdd = async (fields: ActiveCustomer) => {
@@ -97,7 +90,6 @@ const TableList: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<ActiveCustomer>();
   const [selectedRows, setSelectedRows] = useState<ActiveCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
-  const [uniqueFilters, setUniqueFilters] = useState<Record<string, string[]>>({});
   const location = useLocation();
 
   // 监听路由变化
@@ -111,10 +103,6 @@ const TableList: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       hideInSearch: true,
-      filters: Object.keys(STATUS_COLOR_MAP).map((k) => ({
-        text: k,
-        value: k,
-      })),
       render: (_, record) => (
         <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
       ),
@@ -137,9 +125,17 @@ const TableList: React.FC = () => {
                 'green',
               ];
               const color = colors[index % colors.length];
+              const handleCopy = () => {
+                copy(c);
+                message.success(`已复制：${c}`);
+              };
               return (
                 <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
                   <Tag color={color}>{c}</Tag>
+                  <CopyOutlined
+                    style={{ cursor: 'pointer', color: '#1890ff' }}
+                    onClick={handleCopy}
+                  />
                   {record.isDuplicate && <Tag color="red">重复！</Tag>}
                 </span>
               );
@@ -162,6 +158,28 @@ const TableList: React.FC = () => {
       title: '发文数',
       hideInSearch: true,
       render: (_, record) => (record.articles ? record.articles.length : 0),
+    },
+    {
+      title: '未发数',
+      hideInSearch: true,
+      render: (_, record) =>
+        record.articles ? record.articles.filter((item) => item.isSettled === false).length : 0,
+    },
+    {
+      title: '发文日期',
+      dataIndex: 'publishDate',
+      valueType: 'dateRange', // 启用区间选择
+      hideInTable: true,
+      hideInSearch: false,
+      search: {
+        transform: (value) => {
+          return {
+            startDate: value[0],
+            endDate: value[1],
+          };
+        },
+      },
+      render: (_, record) => record.publishDate || '-',
     },
 
     {
@@ -187,12 +205,12 @@ const TableList: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (!record.articles?.length) return '-';
-        const len=record.articles?.length-1;
+        const len = record.articles?.length - 1;
         return record.articles?.[len].publishDate;
       },
     },
 
-    { title: '负责人', dataIndex: 'owner'  },
+    { title: '负责人', dataIndex: 'owner' },
     { title: '备注', dataIndex: 'remark' },
     { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
@@ -228,47 +246,6 @@ const TableList: React.FC = () => {
     settledFee: 0,
     unsettledFee: 0,
   });
-
-  useEffect(() => {
-    request(`${API_PATH}/unique-filters`).then((res) => {
-      if (res.success) setUniqueFilters(res.data);
-    });
-  }, []);
-  // ③ 先给所有“普通字段”加静态筛选（只显示 50 条，内置本地搜）
-
-  const columnsWithStatic = useMemo(
-    () => addExcelFilters<ActiveCustomer>(baseColumns, uniqueFilters),
-    [baseColumns, uniqueFilters],
-  );
-
-  // ④ 指定“重字段”切换为远程面板（全量搜索）。其余保持静态筛选。
-
-  const HEAVY_FIELDS = ['website', 'remark', 'contact']; // 例如：候选很多的字段
-  const columns: ProColumns<ActiveCustomer>[] = useMemo(
-    () =>
-      columnsWithStatic.map((c) => {
-        if (!c.dataIndex || typeof c.dataIndex !== 'string') return c;
-        if (!HEAVY_FIELDS.includes(c.dataIndex)) return c;
-
-        const cc: ProColumns<ActiveCustomer> = { ...c };
-        delete (cc as any).filters;
-        delete (cc as any).filterSearch;
-        cc.filterMultiple = true; // 保持多选
-        cc.filterDropdown = remoteFilterDropdown(
-          c.dataIndex,
-          `${API_PATH}/unique-filter-values`,
-          50,
-        );
-        return cc;
-      }),
-    [columnsWithStatic],
-  );
-
-  useEffect(() => {
-    request(`${API_PATH}/unique-filters`).then((res) => {
-      if (res.success) setUniqueFilters(res.data);
-    });
-  }, []);
 
   return (
     <PageContainer>
@@ -322,7 +299,7 @@ const TableList: React.FC = () => {
           setSummary(res.summary?.[0] ?? { settledFee: 0, unsettledFee: 0 });
           return res;
         }}
-        columns={columns}
+        columns={baseColumns}
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}
