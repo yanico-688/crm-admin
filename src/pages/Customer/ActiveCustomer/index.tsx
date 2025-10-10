@@ -8,9 +8,10 @@ import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, message, Tag } from 'antd';
+import copy from 'copy-to-clipboard';
 import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
-import copy from 'copy-to-clipboard';
+
 type ActiveCustomer = {
   articles: any[];
   isDuplicate: string;
@@ -91,7 +92,11 @@ const TableList: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<ActiveCustomer[]>([]);
   const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const location = useLocation();
-
+  const [summary, setSummary] = useState<{ settledFee: number; unsettledFee: number }>({
+    settledFee: 0,
+    unsettledFee: 0,
+  });
+  const [sentCount, setSentCount] = useState(0);
   // 监听路由变化
   useEffect(() => {
     if (actionRef.current) {
@@ -161,10 +166,19 @@ const TableList: React.FC = () => {
     },
     {
       title: '未发数',
-      hideInSearch: true,
+      dataIndex: 'hasUnsettled',
+      valueType: 'select',
+      valueEnum: {
+        true: { text: '有未发文' },
+        false: { text: '无未发文' },
+      },
       render: (_, record) =>
-        record.articles ? record.articles.filter((item) => item.isSettled === false).length : 0,
-    },
+        record.articles
+          ? record.articles.filter(item => item.isSettled === false).length
+          : 0,
+    }
+
+,
     {
       title: '发文日期',
       dataIndex: 'publishDate',
@@ -242,10 +256,6 @@ const TableList: React.FC = () => {
       ],
     },
   ];
-  const [summary, setSummary] = useState<{ settledFee: number; unsettledFee: number }>({
-    settledFee: 0,
-    unsettledFee: 0,
-  });
 
   return (
     <PageContainer>
@@ -296,7 +306,8 @@ const TableList: React.FC = () => {
 
           // 1. 请求表格数据
           const res = (await queryList(API_PATH, query, sort)) as any;
-          setSummary(res.summary?.[0] ?? { settledFee: 0, unsettledFee: 0 });
+          setSummary(res.summary ?? { settledFee: 0, unsettledFee: 0 });
+          setSentCount(res.sentCount);
           return res;
         }}
         columns={baseColumns}
@@ -366,8 +377,11 @@ const TableList: React.FC = () => {
         <span style={{ marginRight: 24 }}>
           已结稿费（万）：<b>{summary.settledFee ?? 0}</b>
         </span>
-        <span>
+        <span style={{ marginRight: 24 }}>
           未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
+        </span>
+        <span style={{ marginRight: 24 }}>
+          发稿数 ：<b>{sentCount ?? 0}</b>
         </span>
       </div>
     </PageContainer>
