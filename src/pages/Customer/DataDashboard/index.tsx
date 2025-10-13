@@ -93,9 +93,8 @@ const DataDashboard: React.FC = () => {
     发送: number;
     回访: number;
     谈判: number;
-    未回复: number;
-    已回复: number;
     待合作: number;
+    已合作: number;
   };
 
   useEffect(() => {
@@ -109,6 +108,7 @@ const DataDashboard: React.FC = () => {
 
     queryItem(`${API_PATH}/dailyStatus`, params).then((res) => {
       if (!res.success) return;
+      console.log(res.data)
       const dailyData: DailyRecord[] = res.data;
       const dates = dailyData.map((d) => d.date);
       const series = [
@@ -116,6 +116,7 @@ const DataDashboard: React.FC = () => {
         { name: '回访', color: '#13c2c2' },
         { name: '谈判', color: '#fa8c16' },
         { name: '待合作', color: '#40a9ff' },
+        { name: '已合作', color: '#52c41a' },
       ].map((s) => ({
         name: s.name,
         type: 'bar',

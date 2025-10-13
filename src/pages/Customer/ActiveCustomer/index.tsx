@@ -105,6 +105,14 @@ const TableList: React.FC = () => {
   }, [location.pathname]);
   const baseColumns: ProColumns<ActiveCustomer>[] = [
     {
+      title: '序号',
+      dataIndex: 'index',
+      valueType: 'index', // ✅ ProTable 专用，会自动生成序号
+      width: 60,
+      align: 'center',
+    },
+
+    {
       title: '状态',
       dataIndex: 'status',
       hideInSearch: true,
