@@ -153,7 +153,7 @@ const AllCustomersPage: React.FC = () => {
           >
             新建
           </Button>,
-,
+
           selectedRows.length > 0 && (
             <Popconfirm
               key="batchDelete"
