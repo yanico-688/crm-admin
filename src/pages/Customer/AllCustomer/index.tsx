@@ -52,6 +52,11 @@ const AllCustomersPage: React.FC = () => {
         return <Tag color={statusItem.color}>{statusItem.text}</Tag>;
       },
     },
+    {
+      title: '领取人',
+      dataIndex: 'owner',
+
+    },
 
     {
       title: '不可领取',
@@ -121,6 +126,7 @@ const AllCustomersPage: React.FC = () => {
         rowKey="_id"
         actionRef={actionRef}
         columns={columns}
+        search={{ labelWidth: 120, collapsed: false }}
         rowSelection={{
           onChange: (_, selected) => setSelectedRows(selected),
         }}
@@ -137,32 +143,6 @@ const AllCustomersPage: React.FC = () => {
           return (await queryList(API_PATH, query)) as any;
         }}
         toolBarRender={() => [
-          // <Button
-          //   key="flash"
-          //   type="primary"
-          //   onClick={() => {
-          //     Modal.confirm({
-          //       title: '同步确认',
-          //       content: '确定要从 MyCustomer、PendingCustomer、ActiveCustomer 同步数据到总表吗？',
-          //       okText: '确认同步',
-          //       cancelText: '取消',
-          //       onOk: async () => {
-          //         try {
-          //           const res = await addItem(`${API_PATH}/syncFromOthers`, {});
-          //           if (res.success) {
-          //             message.success(res.message || '同步成功');
-          //           } else {
-          //             message.error(res.message || '同步失败');
-          //           }
-          //         } catch (e: any) {
-          //           message.error(e.message || '请求出错');
-          //         }
-          //       },
-          //     });
-          //   }}
-          // >
-          //   同步数据
-          // </Button>,
           <Button
             key="create"
             type="primary"
@@ -173,6 +153,7 @@ const AllCustomersPage: React.FC = () => {
           >
             新建
           </Button>,
+,
           selectedRows.length > 0 && (
             <Popconfirm
               key="batchDelete"
