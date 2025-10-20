@@ -1,4 +1,4 @@
-import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import { addItem, getItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Tag } from 'antd';
@@ -153,7 +153,72 @@ const AllCustomersPage: React.FC = () => {
           >
             新建
           </Button>,
+          <Button
+            key="matchOwner"
+            onClick={async () => {
+              const key = 'matchOwnerProgress';
+              let timer: any;
+              try {
+                // 1) 启动任务（POST）
+                const startRes = await addItem(`${API_PATH}/matchOwners/start`, {});
+                if (!startRes?.success) {
+                  message.error(startRes?.message || '任务启动失败');
+                  return;
+                }
 
+                // 2) 开始显示持久提示
+                message.open({
+                  type: 'loading',
+                  content: '任务已启动，正在分批匹配领取人...',
+                  key,
+                  duration: 0,
+                });
+
+                // 3) 轮询进度
+                const poll = async () => {
+                  const res = await getItem(`${API_PATH}/matchOwners/progress`);
+                  // 兼容不同返回形状：{ success, data: {...} } 或直接 {...}
+                  const progress = res?.data ?? res;
+                  const { total = 0, processed = 0, running = false } = progress || {};
+                  const percent = total ? ((processed / total) * 100).toFixed(1) : '0.0';
+
+                  message.open({
+                    type: 'loading',
+                    content: `正在匹配领取人... 已完成 ${processed}/${total} (${percent}%)`,
+                    key,
+                    duration: 0,
+                  });
+
+                  if (!running) {
+                    clearInterval(timer);
+                    message.open({
+                      type: 'success',
+                      content: `匹配完成，共处理 ${processed} 条`,
+                      key,
+                      duration: 4,
+                    });
+                    actionRef.current?.reload();
+                  }
+                };
+
+                // 先拉一次，马上看到数字
+                await poll();
+                // 再每秒轮询
+                timer = setInterval(poll, 1000);
+              } catch (e: any) {
+                clearInterval(timer);
+                message.open({
+                  type: 'error',
+                  content: e?.message || '请求出错',
+                  key,
+                  duration: 5,
+                });
+              }
+            }}
+          >
+            一键匹配领取人
+          </Button>
+,
           selectedRows.length > 0 && (
             <Popconfirm
               key="batchDelete"

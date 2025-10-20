@@ -6,6 +6,8 @@ export async function getList(url: string) {
   return request(url, { method: 'GET' });
 }
 
+export const getItem = (url: string, params?: any) =>
+  request(url, { method: 'GET', params });
 /** 获取当前的用户 GET /api/currentUser */
 export async function currentUser(options?: { [key: string]: any }) {
   return request<API.CurrentUser>('/auth/profile', {
