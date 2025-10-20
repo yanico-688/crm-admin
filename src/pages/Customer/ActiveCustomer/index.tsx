@@ -11,8 +11,10 @@ import { Button, message, Tag } from 'antd';
 import copy from 'copy-to-clipboard';
 import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
+import dayjs from 'dayjs';
 
 type ActiveCustomer = {
+  createdAt: string;
   articles: any[];
   isDuplicate: string;
   _id?: string;
@@ -155,18 +157,14 @@ const TableList: React.FC = () => {
             })
           : record.contact,
     },
-
     {
       title: '总稿费（万）',
-      hideInSearch: true,
-      render: (_, record) => {
-        const total = (record.articles || []).reduce(
-          (sum: number, item: any) => sum + (item.thisFee || 0),
-          0,
-        );
-        return total.toFixed(2);
-      },
-    },
+      dataIndex: 'totalFee', // ✅ 关键：让它成为一个真正的字段，支持搜索
+      valueType: 'digit', // ✅ 数字输入框
+      render: (_, record) => (record.totalFee ? record.totalFee.toFixed(2) : '0.00'),
+    }
+
+    ,
     {
       title: '发文数',
       hideInSearch: true,
@@ -234,7 +232,22 @@ const TableList: React.FC = () => {
 
     { title: '负责人', dataIndex: 'owner' },
     { title: '备注', dataIndex: 'remark' },
-    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      valueType: 'dateRange', // ✅ 使用区间筛选
+      search: {
+        transform: (value) => {
+          // value 是一个 [start, end] 数组
+          return {
+            startTime: value[0],
+            endTime: value[1],
+          };
+        },
+      },
+      render: (_, record) => record.createdAt && dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
+    }
+,
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
