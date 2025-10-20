@@ -402,7 +402,7 @@ const TableList: React.FC = () => {
           未结稿费（万）：<b>{summary.unsettledFee ?? 0}</b>
         </span>
         <span style={{ marginRight: 24 }}>
-          发稿数 ：<b>{sentCount ?? 0}</b>
+          发文数 ：<b>{sentCount ?? 0}</b>
         </span>
       </div>
     </PageContainer>
