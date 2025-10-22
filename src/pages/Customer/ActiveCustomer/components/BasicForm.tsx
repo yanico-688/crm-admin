@@ -85,7 +85,7 @@ const BasicForm: React.FC = () => {
                     )}
                   </span>
                   <span>关键字：{record?.keywords || '-'}</span>
-                  <span>稿费：{record?.thisFee ?? 0} 元</span>
+                  <span>稿费：{record?.thisFee ?? 0} 万元</span>
                   <Tag color={record?.isSettled ? 'success' : 'error'}>
                     {record?.isSettled ? '已结算' : '未结算'}
                   </Tag>

@@ -214,7 +214,16 @@ const TableList: React.FC = () => {
     },
     {
       title: '初始发布',
-      hideInSearch: true,
+      valueType: 'dateRange', // ✅ 使用区间筛选
+      search: {
+        transform: (value) => {
+          // value 是一个 [start, end] 数组
+          return {
+            firstStartDate: value[0],
+            firstEndDate: value[1],
+          };
+        },
+      },
       render: (_, record) => {
         if (!record.articles?.length) return '-';
         return record.articles?.[0].publishDate;
