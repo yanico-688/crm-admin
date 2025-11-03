@@ -438,7 +438,7 @@ const TableList: React.FC = () => {
                   onOk: () => handleBatchAbandon(),
                 });
               }}>
-                批量放弃
+                批量打回
               </Button>
             ),
             selectedRowsState?.length > 0 && access.canSuperAdmin && (
