@@ -51,6 +51,13 @@ const AllCustomersPage: React.FC = () => {
         const statusItem = STATUS_MAP[record.status] || {};
         return <Tag color={statusItem.color}>{statusItem.text}</Tag>;
       },
+      valueType: 'select', // ✅ 搜索时显示为下拉框
+      valueEnum: {
+        已被领取: { text: '已被领取' },
+        被打回: { text: '被打回' },
+        确认错误: { text: '确认错误' },
+        可领取: { text: '可领取' },
+      },
     },
     {
       title: '领取人',
@@ -89,6 +96,13 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '修改时间',
       dataIndex: 'updatedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
+    {
+      title: '打回时间',
+      dataIndex: 'backAt',
       valueType: 'dateTime',
       hideInSearch: true,
       sorter: true,
