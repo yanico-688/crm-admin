@@ -113,15 +113,6 @@ const TableList: React.FC = () => {
       width: 60,
       align: 'center',
     },
-
-    {
-      title: '状态',
-      dataIndex: 'status',
-      hideInSearch: true,
-      render: (_, record) => (
-        <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
-      ),
-    },
     {
       title: '联系方式',
       dataIndex: 'contact',

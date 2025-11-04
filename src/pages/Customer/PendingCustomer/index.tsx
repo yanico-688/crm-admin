@@ -1,3 +1,4 @@
+import CopyToClipboard from '@/components/CopyToClipboard';
 import DeleteButton from '@/components/DeleteButton';
 import ModalFormWrapper from '@/pages/Customer/PendingCustomer/components/CreateOrUpdate';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
@@ -122,20 +123,11 @@ const TableList: React.FC = () => {
       width: 60,
       align: 'center',
     },
-
-    {
-      title: '状态',
-      dataIndex: 'status',
-      hideInSearch: true,
-      render: (_, record) => (
-        <Tag color={STATUS_COLOR_MAP[record.status] || 'default'}>{record.status}</Tag>
-      ),
-    },
     {
       title: '联系方式',
       dataIndex: 'contact',
       sorter: true,
-      width: 200,
+      width: 300,
       render: (_, record) =>
         Array.isArray(record.contact)
           ? record.contact.map((c, index) => {
@@ -152,18 +144,11 @@ const TableList: React.FC = () => {
               const color = colors[index % colors.length];
               return (
                 <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
-                  <Tag color={color}>{c}</Tag>
+                  <Tag color={color}>{c}</Tag> <CopyToClipboard text={c} />
                 </span>
               );
             })
           : record.contact,
-    },
-    {
-      title: '重复',
-      dataIndex: 'isDup',
-      hideInSearch: true, // 不用在搜索里
-      render: (_, record) =>
-        record.isDup ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
     },
     {
       title: '首单佣金',
@@ -195,7 +180,7 @@ const TableList: React.FC = () => {
       },
     },
     { title: '本次稿费（万）', dataIndex: 'thisFee', hideInSearch: true, sorter: true },
-    { title: '负责人', dataIndex: 'owner'  },
+    { title: '负责人', dataIndex: 'owner' },
     { title: '备注', dataIndex: 'remark' },
     {
       title: '创建时间',

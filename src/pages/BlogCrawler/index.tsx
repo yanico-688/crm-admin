@@ -1,11 +1,19 @@
 import { addItem, queryList } from '@/services/ant-design-pro/api';
-import { useAccess } from '@@/exports';
-import { type ActionType, FooterToolbar, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
+import {
+  type ActionType,
+  FooterToolbar,
+  PageContainer,
+  ProColumns,
+  ProTable,
+} from '@ant-design/pro-components';
 import { Button, DatePicker, Input, InputNumber, message, Space } from 'antd';
 import React, { useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import CrawlLogViewer from '@/pages/BlogCrawler/CrawlLogViewer';
 import { MyCustomer } from '@/pages/Customer/MyCustomer';
+import { CopyOutlined } from '@ant-design/icons';
+import CopyToClipboard from '@/components/CopyToClipboard';
+
 const { RangePicker } = DatePicker;
 type BlogData = {
   _id: string;
@@ -24,8 +32,6 @@ const BlogCrawler: React.FC = () => {
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [selectedRowsState, setSelectedRows] = useState<MyCustomer[]>([]);
   const actionRef = useRef<ActionType>();
-  const access = useAccess();
-
   const handleCrawl = async () => {
     if (!keyword.trim()) {
       message.warning('请输入关键字');
@@ -88,8 +94,9 @@ const BlogCrawler: React.FC = () => {
       title: '平台网址',
       dataIndex: 'platformUrl',
       render: (_, record) => (
+
         <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
-          {record.platformUrl}
+          {record.platformUrl}        <CopyToClipboard text={record.platformUrl} />
         </a>
       ),
     },

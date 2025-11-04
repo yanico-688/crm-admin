@@ -1,4 +1,5 @@
-import { addItem, getItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
+import CopyToClipboard from '@/components/CopyToClipboard';
+import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
 import { useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Tag } from 'antd';
@@ -7,7 +8,7 @@ import CustomerForm from './components/CustomerForm';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   可领取: { color: 'green', text: '可领取' },
-  已被领取: { color: 'pink', text: '已被领取' },
+  已被领取: { color: '#40a9ff', text: '已被领取' },
   被打回: { color: 'blue', text: '被打回' },
   确认错误: { color: 'red', text: '确认错误' },
 };
@@ -26,22 +27,24 @@ const AllCustomersPage: React.FC = () => {
     }
   }, [location.pathname]);
   const columns: ProColumns<any>[] = [
-    { title: '联系方式', dataIndex: 'contact', copyable: true, sorter: true, width: 180 },
-    // {
-    //   title: '重复',
-    //   dataIndex: 'isDup',
-    //   hideInSearch: true, // 不用在搜索里
-    //   render: (_, record) =>
-    //     record.isDup ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
-    // },
+    {
+      title: '序号',
+      dataIndex: 'index',
+      valueType: 'index',
+      width: 80,
+    },
+    { title: '联系方式', dataIndex: 'contact', copyable: true, sorter: true, width: 200 },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
       width: 150,
       render: (_, record) => (
-        <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
-          {record.platformUrl}
-        </a>
+        <>
+          <a href={record.platformUrl} target="_blank" rel="noopener noreferrer" style={{marginRight:'10px'}}>
+            {record.platformUrl}
+          </a>
+          <CopyToClipboard text={record.platformUrl}  />
+        </>
       ),
     },
     {
@@ -62,7 +65,6 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '领取人',
       dataIndex: 'owner',
-
     },
 
     {
@@ -87,6 +89,13 @@ const AllCustomersPage: React.FC = () => {
     { title: '来源', dataIndex: 'from' },
     { title: '备注', dataIndex: 'remark', width: 100 },
     {
+      title: '打回时间',
+      dataIndex: 'backAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      sorter: true,
+    },
+    {
       title: '创建时间',
       dataIndex: 'createdAt',
       valueType: 'dateTime',
@@ -100,13 +109,7 @@ const AllCustomersPage: React.FC = () => {
       hideInSearch: true,
       sorter: true,
     },
-    {
-      title: '打回时间',
-      dataIndex: 'backAt',
-      valueType: 'dateTime',
-      hideInSearch: true,
-      sorter: true,
-    },
+
     {
       title: '操作',
       valueType: 'option',
@@ -167,7 +170,6 @@ const AllCustomersPage: React.FC = () => {
           >
             新建
           </Button>,
-
 
           selectedRows.length > 0 && (
             <Popconfirm

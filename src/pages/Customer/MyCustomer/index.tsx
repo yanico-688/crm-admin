@@ -1,3 +1,4 @@
+import CopyToClipboard from '@/components/CopyToClipboard';
 import DeleteButton from '@/components/DeleteButton';
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
@@ -155,6 +156,7 @@ const TableList: React.FC = () => {
       title: '序号',
       dataIndex: 'index',
       valueType: 'index',
+      width: 80,
     },
 
     // { title: '姓名', dataIndex: 'name' },
@@ -164,27 +166,23 @@ const TableList: React.FC = () => {
       copyable: true,
       sorter: true,
     },
-    // {
-    //   title: '重复',
-    //   dataIndex: 'isDupPending',
-    //   hideInSearch: true, // 不用在搜索里
-    //   render: (_, record) =>
-    //     record.isDupPending ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
-    // },    {
-    //   title: '重复2',
-    //   dataIndex: 'isDupActive',
-    //   hideInSearch: true, // 不用在搜索里
-    //   render: (_, record) =>
-    //     record.isDupActive ? <Tag color="red">重复</Tag> : <Tag color="green">唯一</Tag>,
-    // },
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
       render: (_, record) => (
-        <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
-          {record.platformUrl}
-        </a>
+        <>
+          <a
+            href={record.platformUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginRight: '10px' }}
+          >
+            {record.platformUrl}
+          </a>
+          <CopyToClipboard text={record.platformUrl} />
+        </>
       ),
+      width: 300,
     },
     {
       title: '最新发邮件时间',
@@ -306,7 +304,7 @@ const TableList: React.FC = () => {
           <Popconfirm
             title="确定要将该客户标记为待合作吗？"
             okText="确认"
-            key='firm'
+            key="firm"
             cancelText="取消"
             onConfirm={async () => {
               try {
@@ -334,7 +332,7 @@ const TableList: React.FC = () => {
             >
               待合作
             </Button>
-          </Popconfirm>
+          </Popconfirm>,
         ];
       },
     },
@@ -428,16 +426,20 @@ const TableList: React.FC = () => {
               </Button>
             ),
             selectedRowsState?.length > 0 && (
-              <Button key="" danger     onClick={() => {
-                Modal.confirm({
-                  title: '确认操作',
-                  content: `确定要放弃这 ${selectedRowsState.length} 条记录吗？`,
-                  okText: '确认放弃',
-                  cancelText: '取消',
-                  okType: 'danger',
-                  onOk: () => handleBatchAbandon(),
-                });
-              }}>
+              <Button
+                key=""
+                danger
+                onClick={() => {
+                  Modal.confirm({
+                    title: '确认操作',
+                    content: `确定要放弃这 ${selectedRowsState.length} 条记录吗？`,
+                    okText: '确认放弃',
+                    cancelText: '取消',
+                    okType: 'danger',
+                    onOk: () => handleBatchAbandon(),
+                  });
+                }}
+              >
                 批量打回
               </Button>
             ),
