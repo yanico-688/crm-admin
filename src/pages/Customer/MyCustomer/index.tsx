@@ -150,6 +150,26 @@ const TableList: React.FC = () => {
       message.error(e.message || '请求出错');
     }
   };
+  const handleBatchWrong = async () => {
+    if (selectedRowsState.length === 0) {
+      message.warning('请先选择数据');
+      return;
+    }
+
+    try {
+      const ids = selectedRowsState.map((row) => row._id);
+      const res = await addItem('/myCustomers/batchWrong', { ids });
+      if (res.success) {
+        message.success(res.message || '操作成功');
+        setSelectedRows([]); // 清空选择
+        actionRef.current?.reload?.(); // 刷新表格
+      } else {
+        message.error(res.message || '操作失败');
+      }
+    } catch (e: any) {
+      message.error(e.message || '请求出错');
+    }
+  };
 
   const baseColumns: ProColumns<MyCustomer>[] = [
     {
@@ -440,10 +460,28 @@ const TableList: React.FC = () => {
                   });
                 }}
               >
-                批量打回
+                批量放弃（被打回）
               </Button>
             ),
-            selectedRowsState?.length > 0 && access.canSuperAdmin && (
+            selectedRowsState?.length > 0 && (
+              <Button
+                key=""
+                danger
+                onClick={() => {
+                  Modal.confirm({
+                    title: '确认操作',
+                    content: `确定这 ${selectedRowsState.length} 条记录无效吗？`,
+                    okText: '确定',
+                    cancelText: '取消',
+                    okType: 'danger',
+                    onOk: () => handleBatchWrong(),
+                  });
+                }}
+              >
+                批量无效（确认错误）
+              </Button>
+            ),
+            selectedRowsState?.length > 0 &&   (
               <DeleteButton
                 onOk={async () => {
                   await handleRemove(selectedRowsState?.map((item) => item._id!) as any);

@@ -1,6 +1,6 @@
 import CopyToClipboard from '@/components/CopyToClipboard';
 import { addItem, queryList, removeItem, updateItem } from '@/services/ant-design-pro/api';
-import { useLocation } from '@@/exports';
+import { useAccess, useLocation } from '@@/exports';
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components';
 import { Button, message, Popconfirm, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,7 +19,7 @@ const AllCustomersPage: React.FC = () => {
   const [currentRow, setCurrentRow] = useState<any>();
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const location = useLocation();
-
+  const access = useAccess();
   // 监听路由变化
   useEffect(() => {
     if (actionRef.current) {
@@ -40,10 +40,15 @@ const AllCustomersPage: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <>
-          <a href={record.platformUrl} target="_blank" rel="noopener noreferrer" style={{marginRight:'10px'}}>
+          <a
+            href={record.platformUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginRight: '10px' }}
+          >
             {record.platformUrl}
           </a>
-          <CopyToClipboard text={record.platformUrl}  />
+          <CopyToClipboard text={record.platformUrl} />
         </>
       ),
     },
@@ -147,6 +152,11 @@ const AllCustomersPage: React.FC = () => {
         rowSelection={{
           onChange: (_, selected) => setSelectedRows(selected),
         }}
+        pagination={{
+          defaultPageSize: 20,
+          pageSizeOptions: ['20', '50', '100', '500', '1000'],
+          showSizeChanger: true,
+        }}
         request={async (params, sort) => {
           const query: Record<string, any> = {
             ...params, // ✅ 包含 current / pageSize
@@ -184,6 +194,21 @@ const AllCustomersPage: React.FC = () => {
               }}
             >
               <Button danger>批量删除</Button>
+            </Popconfirm>
+          ),
+          selectedRows.length > 0 && access.canSuperAdmin && (
+            <Popconfirm
+              key="batchWrong"
+              title={`确认错误选中的 ${selectedRows.length} 条数据？`}
+              onConfirm={async () => {
+                await addItem(`${API_PATH}/batchWrong`, {
+                  ids: selectedRows.map((r) => r._id),
+                });
+                setSelectedRows([]);
+                actionRef.current?.reload();
+              }}
+            >
+              <Button danger >批量确认错误</Button>
             </Popconfirm>
           ),
         ]}
