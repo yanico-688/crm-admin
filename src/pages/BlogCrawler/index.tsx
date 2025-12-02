@@ -1,3 +1,6 @@
+import CopyToClipboard from '@/components/CopyToClipboard';
+import CrawlLogViewer from '@/pages/BlogCrawler/CrawlLogViewer';
+import { MyCustomer } from '@/pages/Customer/MyCustomer';
 import { addItem, queryList } from '@/services/ant-design-pro/api';
 import {
   type ActionType,
@@ -7,12 +10,8 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, DatePicker, Input, InputNumber, message, Space } from 'antd';
-import React, { useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import CrawlLogViewer from '@/pages/BlogCrawler/CrawlLogViewer';
-import { MyCustomer } from '@/pages/Customer/MyCustomer';
-import { CopyOutlined } from '@ant-design/icons';
-import CopyToClipboard from '@/components/CopyToClipboard';
+import React, { useRef, useState } from 'react';
 
 const { RangePicker } = DatePicker;
 type BlogData = {
@@ -48,7 +47,7 @@ const BlogCrawler: React.FC = () => {
     const [start, end] = dateRange;
     setLoading(true);
     try {
-      const res = await addItem('/allCustomers/crawlBlogs', {
+      const res: any = await addItem('/allCustomers/crawlBlogs', {
         keyword,
         page,
         startPage,
@@ -56,11 +55,9 @@ const BlogCrawler: React.FC = () => {
         endDate: end.format('YYYY-MM-DD'),
       });
       if (res.success) {
-        message.success('爬虫启动成功');
+        message.success(res.message);
         // 🔑 爬虫完成后刷新表格
         actionRef.current?.reload?.();
-      } else {
-        message.error(res.message || '爬虫失败');
       }
     } catch (e: any) {
       message.error(e.message || '请求出错');
@@ -94,9 +91,8 @@ const BlogCrawler: React.FC = () => {
       title: '平台网址',
       dataIndex: 'platformUrl',
       render: (_, record) => (
-
         <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
-          {record.platformUrl}        <CopyToClipboard text={record.platformUrl} />
+          {record.platformUrl} <CopyToClipboard text={record.platformUrl} />
         </a>
       ),
     },
@@ -116,7 +112,7 @@ const BlogCrawler: React.FC = () => {
     { title: '爬取时间', dataIndex: 'createdAt', valueType: 'dateTime' },
     { title: '备注', dataIndex: 'remark' },
   ];
-// 新增方法
+  // 新增方法
   const handleAddToMaster = async () => {
     if (selectedRowsState.length === 0) {
       message.warning('请先选择数据');
@@ -125,7 +121,7 @@ const BlogCrawler: React.FC = () => {
     try {
       // 只传 ids
       const ids = selectedRowsState.map((row) => row._id);
-      const res = await addItem('/allCustomers/addToAll',  { ids });
+      const res = await addItem('/allCustomers/addToAll', { ids });
       if (res.success) {
         message.success(res.message || '已加入总表');
         setSelectedRows([]); // 清空选择
@@ -153,45 +149,42 @@ const BlogCrawler: React.FC = () => {
         rowSelection={{
           onChange: (_, selectedRows) => setSelectedRows(selectedRows as any),
         }}
-
         toolBarRender={() => [
-            (
-            <Space key="tools">
-              关键字：
-              <Input
-                placeholder="请输入关键字"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                style={{ width: 200 }}
-              />
-              起始页数:
-              <InputNumber
-                min={1}
-                value={startPage}
-                onChange={(val) => setStartPage(val || 1)}
-                style={{ width: 100 }}
-              />
-              结束页数:
-              <InputNumber
-                min={1}
-                value={page}
-                onChange={(val) => setPage(val || 1)}
-                style={{ width: 100 }}
-              />
-              日期范围:
-              <RangePicker
-                value={dateRange}
-                onChange={(val) => setDateRange(val as any)}
-                disabledDate={(d) => d.isAfter(dayjs())} // 禁止选择未来日期
-              />
-              <Button type="primary" onClick={handleCrawl} loading={loading}>
-                开始爬虫
-              </Button>
-              <Button danger onClick={handleStopCrawl} loading={stopping}>
-                停止爬虫
-              </Button>
-            </Space>
-          ),
+          <Space key="tools">
+            关键字：
+            <Input
+              placeholder="请输入关键字"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              style={{ width: 200 }}
+            />
+            起始页数:
+            <InputNumber
+              min={1}
+              value={startPage}
+              onChange={(val) => setStartPage(val || 1)}
+              style={{ width: 100 }}
+            />
+            结束页数:
+            <InputNumber
+              min={1}
+              value={page}
+              onChange={(val) => setPage(val || 1)}
+              style={{ width: 100 }}
+            />
+            日期范围:
+            <RangePicker
+              value={dateRange}
+              onChange={(val) => setDateRange(val as any)}
+              disabledDate={(d) => d.isAfter(dayjs())} // 禁止选择未来日期
+            />
+            <Button type="primary" onClick={handleCrawl} loading={loading}>
+              开始爬虫
+            </Button>
+            <Button danger onClick={handleStopCrawl} loading={stopping}>
+              停止爬虫
+            </Button>
+          </Space>,
         ]}
       />
 

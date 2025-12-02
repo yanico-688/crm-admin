@@ -6,7 +6,7 @@ const CrawlLogViewer: React.FC = () => {
   const logBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://43.128.150.131:8082/ws/`); // ⚠️ 改成你的后端地址
+    const ws = new WebSocket(`ws://43.128.143.223:8082/ws/`); // ⚠️ 改成你的后端地址
 
     ws.onmessage = (event) => {
       setLogs((prev) => [...prev, event.data]);
