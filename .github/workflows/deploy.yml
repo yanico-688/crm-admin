@@ -28,25 +28,6 @@ jobs:
           npm install
           npm run build
 
-      - name: 🛠️ 设置 SSH 私钥和连接复用
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          cat >> ~/.ssh/config <<EOF
-          Host winserver
-            HostName ${{ secrets.WINDOWS_HOST }}
-            User ${{ secrets.WINDOWS_USERNAME }}
-            Port 22
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking no
-            ControlMaster auto
-            ControlPath ~/.ssh/cm-%r@%h:%p
-            ControlPersist 10m
-            SendEnv LANG
-          EOF
-
       - name: 📤 上传 dist 到 Linux 服务器
         uses: appleboy/scp-action@v0.1.4
         with:
