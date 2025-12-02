@@ -47,12 +47,13 @@ jobs:
             SendEnv LANG
           EOF
 
-      - name: 📤 上传 dist 到 Windows（自动打包为 dist.tar.gz）
+      - name: 📤 上传 dist 到 Linux 服务器
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.WINDOWS_HOST }}
-          username: ${{ secrets.WINDOWS_USERNAME }}
+          host: ${{ secrets.LINUX_HOST }}
+          username: ${{ secrets.LINUX_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: "dist"
-          target: "E:/crm_project/admin"
+          source: "dist/*"
+          target: "/home/crm/admin"
+

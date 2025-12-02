@@ -120,7 +120,7 @@ const TableList: React.FC = () => {
 
   const columns: ProColumns<API.ItemData>[] = [
     {
-      title:'登录账号',
+      title:'账号',
       dataIndex: 'email',
       copyable: true,
       render: (dom, entity) => {
