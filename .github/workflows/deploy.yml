@@ -34,7 +34,7 @@ jobs:
           host: ${{ secrets.LINUX_HOST }}
           username: ${{ secrets.LINUX_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
+          port: 2223
           source: "dist/*"
           target: "/home/crm/admin"
 
