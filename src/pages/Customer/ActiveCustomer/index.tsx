@@ -7,11 +7,11 @@ import { CopyOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { FooterToolbar, PageContainer, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, message, Tag } from 'antd';
+import { Button, message, Popconfirm, Tag } from 'antd';
 import copy from 'copy-to-clipboard';
+import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import BatchCreate from './components/BatchCreate';
-import dayjs from 'dayjs';
 
 type ActiveCustomer = {
   createdAt: string;
@@ -33,15 +33,7 @@ type ActiveCustomer = {
   remark?: string;
 };
 
-const STATUS_COLOR_MAP: Record<string, string> = {
-  待合作: 'default',
-  已合作: 'green',
-  确认放弃: 'red',
-  长期合作: 'blue',
-};
-
 const API_PATH = '/activeCustomer';
-
 const handleAdd = async (fields: ActiveCustomer) => {
   const hide = message.loading('正在添加...');
   try {
@@ -153,9 +145,8 @@ const TableList: React.FC = () => {
       dataIndex: 'totalFee', // ✅ 关键：让它成为一个真正的字段，支持搜索
       valueType: 'digit', // ✅ 数字输入框
       render: (_, record) => (record.totalFee ? record.totalFee.toFixed(2) : '0.00'),
-    }
+    },
 
-    ,
     {
       title: '发文数',
       hideInSearch: true,
@@ -170,12 +161,9 @@ const TableList: React.FC = () => {
         false: { text: '无未发文' },
       },
       render: (_, record) =>
-        record.articles
-          ? record.articles.filter(item => item.isSettled === false).length
-          : 0,
-    }
+        record.articles ? record.articles.filter((item) => item.isSettled === false).length : 0,
+    },
 
-,
     {
       title: '发文日期',
       dataIndex: 'publishDate',
@@ -245,9 +233,9 @@ const TableList: React.FC = () => {
           };
         },
       },
-      render: (_, record) => record.createdAt && dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
-    }
-,
+      render: (_, record) =>
+        record.createdAt && dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
+    },
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
@@ -277,7 +265,90 @@ const TableList: React.FC = () => {
       ],
     },
   ];
+  const handleExport = async () => {
+    const res = await queryList(API_PATH, {
+      current: 1,
+      pageSize: 99999,
+    });
 
+    // 👇 就是你想要的：定义 ActiveCustomer[]
+    const data = res.data as {
+      _id?: string;
+      contact: string | string[];
+      articles: Array<{ publishDate: string; isSettled: boolean }>;
+      totalFee: number;
+      settledFee: number;
+      unsettledFee: number;
+      firstCommission: number;
+      followUpCommission: number;
+      publishDate: string;
+      website: string;
+      owner: string;
+      remark?: string;
+      createdAt: string;
+      updatedAt: string;
+      status: '待合作' | '已合作';
+      isDuplicate: string;
+      informChatGPT5: boolean;
+      chatGPTReplyTags: string[];
+    }[];
+
+    if (!data || data.length === 0) {
+      message.warning('暂无数据可导出');
+      return;
+    }
+
+    const header = [
+      '联系方式',
+      '总稿费（万）',
+      '发文数',
+      '未发数',
+      '首单佣金（%）',
+      '后续佣金（%）',
+      '初始发布',
+      '最新发布',
+      '负责人',
+      '备注',
+      '创建时间',
+      '修改时间',
+    ];
+
+    const rows = data.map((item: any) => {
+      const articleCount = item.articles?.length || 0;
+      const unsettledCount = item.articles?.filter((a:any) => !a.isSettled).length || 0;
+      const firstPublish = articleCount > 0 ? item.articles[0].publishDate : '';
+      const latestPublish = articleCount > 0 ? item.articles[articleCount - 1].publishDate : '';
+
+      return [
+        Array.isArray(item.contact) ? item.contact.join('; ') : item.contact || '',
+        item.totalFee ? (item.totalFee).toFixed(2) : '0.00',
+        articleCount,
+        unsettledCount,
+        item.firstCommission ?? '',
+        item.followUpCommission ?? '',
+        firstPublish ? dayjs(firstPublish).format('YYYY-MM-DD') : '',
+        latestPublish ? dayjs(latestPublish).format('YYYY-MM-DD') : '',
+        item.owner || '',
+        (item.remark || '').replace(/\n/g, ' '),
+        item.createdAt ? dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss') : '',
+        item.updatedAt ? dayjs(item.updatedAt).format('YYYY-MM-DD HH:mm:ss') : '',
+      ];
+    });
+
+    const csvContent =
+      '\uFEFF' +
+      [header, ...rows]
+        .map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `已合作客户列表_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   return (
     <PageContainer>
       <ProTable<ActiveCustomer>
@@ -308,6 +379,15 @@ const TableList: React.FC = () => {
               }}
             />
           ),
+          <Popconfirm
+            key="export"
+            title="确认导出全部数据？"
+            onConfirm={handleExport}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="primary">导出数据</Button>
+          </Popconfirm>,
         ]}
         request={async (params, sort, filter) => {
           const query: Record<string, any> = { ...params };
