@@ -105,12 +105,7 @@ const TableList: React.FC = () => {
       width: 60,
       align: 'center',
     },
-    {
-      title: '文章关键字',
-      dataIndex: 'articleKeyword',
-      hideInTable: true,
-    }
-,
+
     {
       title: '联系方式',
       dataIndex: 'contact',
@@ -242,6 +237,12 @@ const TableList: React.FC = () => {
       render: (_, record) =>
         record.createdAt && dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
     },
+    {
+      title: '文章关键字',
+      dataIndex: 'articleKeyword',
+      hideInTable: true,
+    }
+    ,
     { title: '修改时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
