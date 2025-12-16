@@ -106,6 +106,12 @@ const TableList: React.FC = () => {
       align: 'center',
     },
     {
+      title: '文章关键字',
+      dataIndex: 'articleKeyword',
+      hideInTable: true,
+    }
+,
+    {
       title: '联系方式',
       dataIndex: 'contact',
       width: 200,
