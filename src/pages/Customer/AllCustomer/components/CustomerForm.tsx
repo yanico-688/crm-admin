@@ -47,10 +47,10 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
 
         <ProFormSelect
           name="blockedOwners"
-          label="联系方式"
+          label="不可领取"
           mode="tags"
           width="md"
-          placeholder="可输入多个，用回车分隔"
+          placeholder="可输入多个用户，用回车分隔"
         />
         <ProFormSelect
           name="status"

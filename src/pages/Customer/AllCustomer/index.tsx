@@ -67,6 +67,7 @@ const AllCustomersPage: React.FC = () => {
         可领取: { text: '可领取' },
       },
     },
+
     {
       title: '领取人',
       dataIndex: 'owner',
@@ -93,12 +94,53 @@ const AllCustomersPage: React.FC = () => {
     { title: '标签', dataIndex: 'tags' },
     { title: '来源', dataIndex: 'from' },
     { title: '备注', dataIndex: 'remark', width: 100 },
+
     {
       title: '打回时间',
       dataIndex: 'backAt',
       valueType: 'dateTime',
       hideInSearch: true,
       sorter: true,
+    },
+    {
+      title: '最后状态',
+      dataIndex: 'lastContactStatus',
+      valueType: 'select',
+      fieldProps: {
+        options: [
+          { label: '可领取', value: '可领取' },
+          { label: '已被领取', value: '已被领取' },
+          { label: '被打回', value: '被打回' },
+          { label: '确认错误', value: '确认错误' },
+          { label: '未发送', value: '未发送' },
+          { label: '未回复', value: '未回复' },
+          { label: '已回复', value: '已回复' },
+          { label: '谈判', value: '谈判' },
+          { label: '待合作', value: '待合作' },
+          { label: '已合作', value: '已合作' },
+          { label: '长期合作', value: '长期合作' },
+          { label: '已放弃', value: '已放弃' },
+        ],
+      },
+      render: (_, record) => {
+        const statusColorMap: Record<string, string> = {
+          可领取: 'green',
+          已被领取: 'processing',
+          被打回: 'blue',
+          确认错误: 'red',
+          未发送: 'default',
+          未回复: 'orange',
+          已回复: 'purple',
+          谈判: 'gold',
+          待合作: 'cyan',
+          已合作: 'success',
+          长期合作: 'processing',
+          已放弃: 'volcano',
+        };
+
+        const text = record.lastContactStatus || '-';
+        return <Tag color={statusColorMap[text] || 'default'}>{text}</Tag>;
+      },
     },
     {
       title: '创建时间',
