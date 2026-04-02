@@ -28,7 +28,7 @@ export type MyCustomer = {
   _id?: string;
   name: string;
   contact: string;
-  platformUrl: string;
+  platformUrl: string[];
   emailSendTime: string;
   secondInvitation?: string;
   status: string;
@@ -189,21 +189,28 @@ const TableList: React.FC = () => {
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
-      render: (_, record) => (
-        <>
-          <a
-            href={record.platformUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ marginRight: '10px' }}
-          >
-            {record.platformUrl}
-          </a>
-          <CopyToClipboard text={record.platformUrl} />
-        </>
-      ),
+      sorter: true,
       width: 300,
+      render: (_, record) =>
+        Array.isArray(record.platformUrl)
+          ? record.platformUrl.map((c, index) => {
+            const colors = [
+              'blue',
+              'purple',
+              'magenta',
+              'cyan',
+              'volcano',
+            ];
+            const color = colors[index % colors.length];
+            return (
+              <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
+                  <Tag color={color}>{c}</Tag> <CopyToClipboard text={c} />
+                </span>
+            );
+          })
+          : record.platformUrl,
     },
+
     {
       title: '最新发邮件时间',
       dataIndex: 'latestEmailSendTime',

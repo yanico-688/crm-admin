@@ -37,20 +37,26 @@ const AllCustomersPage: React.FC = () => {
     {
       title: '平台网址',
       dataIndex: 'platformUrl',
-      width: 150,
-      render: (_, record) => (
-        <>
-          <a
-            href={record.platformUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ marginRight: '10px' }}
-          >
-            {record.platformUrl}
-          </a>
-          <CopyToClipboard text={record.platformUrl} />
-        </>
-      ),
+      sorter: true,
+      width: 300,
+      render: (_, record) =>
+        Array.isArray(record.platformUrl)
+          ?record.platformUrl.map((c: string, index: number) => {
+            const colors = [
+              'blue',
+              'purple',
+              'magenta',
+              'cyan',
+              'volcano',
+            ];
+            const color = colors[index % colors.length];
+            return (
+              <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
+                  <Tag color={color}>{c}</Tag> <CopyToClipboard text={c} />
+                </span>
+            );
+          })
+          : record.platformUrl,
     },
     {
       title: '状态',

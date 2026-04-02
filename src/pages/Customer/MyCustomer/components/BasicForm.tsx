@@ -31,11 +31,13 @@ const BasicForm: React.FC<Props> = () => {
       </ProForm.Group>
 
       <ProForm.Group>
-        <ProFormText
+        <ProFormSelect
           name="platformUrl"
           label="平台网址"
-          width="md"
           rules={[{ required: true, message: '请输入平台网址' }]}
+          mode="tags" // 允许手动输入多个
+          width="xl"
+          placeholder="可输入多个，用回车分隔"
         />
         <ProFormSelect
           name="status"

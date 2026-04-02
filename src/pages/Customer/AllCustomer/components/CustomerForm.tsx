@@ -35,14 +35,16 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
         <ProFormText
           name="contact"
           label="联系方式"
-          width="md"
+          width="xl"
           rules={[{ required: true, message: '请输入联系方式' }]}
         />
-        <ProFormText
+        <ProFormSelect
           name="platformUrl"
           label="平台网址"
-          width="md"
           rules={[{ required: true, message: '请输入平台网址' }]}
+          mode="tags" // 允许手动输入多个
+          width="xl"
+          placeholder="可输入多个，用回车分隔"
         />
 
         <ProFormSelect
@@ -60,7 +62,7 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
           rules={[{ required: true, message: '请选择状态' }]}
         />
         <ProFormText name="tags" label="标签" width="md" />
-        <ProFormTextArea name="remark" label="备注" width="lg" />
+        <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
     </ModalForm>
   );
