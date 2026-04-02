@@ -193,7 +193,7 @@ const TableList: React.FC = () => {
       width: 300,
       render: (_, record) =>
         Array.isArray(record.platformUrl)
-          ? record.platformUrl.map((c, index) => {
+          ? record.platformUrl.map((c: string, index: number) => {
             const colors = [
               'blue',
               'purple',
@@ -202,13 +202,33 @@ const TableList: React.FC = () => {
               'volcano',
             ];
             const color = colors[index % colors.length];
+
             return (
-              <span key={c} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}>
-                  <Tag color={color}>{c}</Tag> <CopyToClipboard text={c} />
-                </span>
+              <span
+                key={c + index}
+                style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}
+              >
+              <a
+                href={c}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ marginRight: 6 }}
+              >
+                <Tag color={color}>{c}</Tag>
+              </a>
+              <CopyToClipboard text={c} />
+            </span>
             );
           })
-          : record.platformUrl,
+          : record.platformUrl && (
+          <a
+            href={record.platformUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {record.platformUrl}
+          </a>
+        ),
     },
 
     {
