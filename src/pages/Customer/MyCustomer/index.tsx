@@ -1,4 +1,3 @@
-import CopyToClipboard from '@/components/CopyToClipboard';
 import DeleteButton from '@/components/DeleteButton';
 import BatchCreate from '@/pages/Customer/MyCustomer/components/BatchCreate';
 import ClaimCustomerModal from '@/pages/Customer/MyCustomer/components/ClaimCustomerForm';
@@ -194,41 +193,33 @@ const TableList: React.FC = () => {
       render: (_, record) =>
         Array.isArray(record.platformUrl)
           ? record.platformUrl.map((c: string, index: number) => {
-            const colors = [
-              'blue',
-              'purple',
-              'magenta',
-              'cyan',
-              'volcano',
-            ];
-            const color = colors[index % colors.length];
+              const colors = ['blue', 'purple', 'magenta', 'cyan', 'volcano'];
+              const color = colors[index % colors.length];
 
-            return (
-              <span
-                key={c + index}
-                style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}
-              >
-              <a
-                href={c}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ marginRight: 6 }}
-              >
-                <Tag color={color}>{c}</Tag>
-              </a>
-              <CopyToClipboard text={c} />
-            </span>
-            );
-          })
+              return (
+                <span
+                  key={c + index}
+                  style={{ display: 'inline-block', marginRight: 4, marginBottom: 4 }}
+                >
+                  <a href={c} target="_blank" rel="noopener noreferrer" style={{ marginRight: 6 }}>
+                    <Tag
+                      color={color}
+                      style={{
+                        maxWidth: 260,
+                        overflow: 'hidden',
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-all',
+                      }}
+                    >{c}</Tag>
+                  </a>
+                </span>
+              );
+            })
           : record.platformUrl && (
-          <a
-            href={record.platformUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {record.platformUrl}
-          </a>
-        ),
+              <a href={record.platformUrl} target="_blank" rel="noopener noreferrer">
+                {record.platformUrl}
+              </a>
+            ),
     },
 
     {
@@ -508,7 +499,7 @@ const TableList: React.FC = () => {
                 批量无效（确认错误）
               </Button>
             ),
-            selectedRowsState?.length > 0 &&   (
+            selectedRowsState?.length > 0 && (
               <DeleteButton
                 onOk={async () => {
                   await handleRemove(selectedRowsState?.map((item) => item._id!) as any);
