@@ -22,7 +22,7 @@ const DataDashboard: React.FC = () => {
   const [owners, setOwners] = useState<string[]>([]);
   const [selectedOwner, setSelectedOwner] = useState<string>(''); // 空 = 总表
   const { RangePicker } = DatePicker;
-
+  const [source, setSource] = useState<string>('naver');
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   // 请求负责人列表
   useEffect(() => {
@@ -33,7 +33,10 @@ const DataDashboard: React.FC = () => {
 
   // 请求后端数据
   useEffect(() => {
-    queryItem(`${API_PATH}/customerStatus`, selectedOwner ? { owner: selectedOwner } : {}).then(
+    const params: any = {};
+    if (selectedOwner) params.owner = selectedOwner;
+    if (source) params.source = source;
+    queryItem(`${API_PATH}/customerStatus`,params).then(
       (res) => {
         if (res.success) {
           const arr = Object.entries(res.data).map(([name, value]) => ({
@@ -44,7 +47,7 @@ const DataDashboard: React.FC = () => {
         }
       },
     );
-  }, [selectedOwner]);
+  }, [selectedOwner, source]);
 
   // 渲染饼图
   useEffect(() => {
@@ -100,7 +103,9 @@ const DataDashboard: React.FC = () => {
   useEffect(() => {
     if (!barRef.current) return;
     const chart = echarts.init(barRef.current);
-    const params: any = selectedOwner ? { owner: selectedOwner } : {};
+    const params: any = {};
+    if (selectedOwner) params.owner = selectedOwner;
+    if (source) params.source = source;
     if (dateRange) {
       params.start = dateRange[0];
       params.end = dateRange[1];
@@ -141,10 +146,63 @@ const DataDashboard: React.FC = () => {
       chart.dispose();
       window.removeEventListener('resize', resize);
     };
-  }, [selectedOwner, dateRange]); // ✅ 监听 dateRange
+  }, [selectedOwner, dateRange, source]); // ✅ 监听 dateRange
 
   return (
     <div style={{ padding: 20 }}>
+         {/* ⭐ 渠道切换（新加） */}
+      <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+        {[
+          { label: 'NAVER', value: 'naver' },
+          { label: 'YouTube', value: 'youtube' },
+          { label: 'GitHub', value: 'github' },
+        ].map((item) => {
+          const active = source === item.value;
+
+          return (
+            <div
+              key={item.value}
+              onClick={() => setSource(item.value)}
+              style={{
+                padding: '10px 22px',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'all 0.25s ease',
+
+                // ⭐ 颜色
+                color: active ? '#fff' : '#1677ff',
+                background: active
+                  ? 'linear-gradient(135deg, #1677ff, #40a9ff)'
+                  : '#fff',
+
+                // ⭐ 边框 + 发光
+                border: '1px solid #1677ff',
+                boxShadow: active
+                  ? '0 6px 20px rgba(22,119,255,0.4)'
+                  : '0 2px 6px rgba(0,0,0,0.08)',
+
+                // ⭐ 立体感
+                transform: active ? 'translateY(-2px)' : 'translateY(0)',
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = '#f0f5ff';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = '#fff';
+                }
+              }}
+            >
+              {item.label}
+            </div>
+          );
+        })}
+      </div>
       {/* 切换按钮（客户总表 / 负责人） */}
       <div style={{ marginBottom: 20 }}>
         <Segmented
