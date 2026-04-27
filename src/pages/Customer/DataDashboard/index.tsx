@@ -204,14 +204,24 @@ const DataDashboard: React.FC = () => {
         })}
       </div>
       {/* 切换按钮（客户总表 / 负责人） */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'left' }}>
         <Segmented
           value={selectedOwner || '客户总表'}
-          onChange={(val) => setSelectedOwner(val === '客户总表' ? '' : (val as string))}
+          onChange={(val) =>
+            setSelectedOwner(val === '客户总表' ? '' : (val as string))
+          }
           options={[
             '客户总表',
-            ...owners.map((o) => `${o}`), // 每个负责人
+            ...owners.map((o) => `${o}`),
           ]}
+          size="large"
+          style={{
+            padding: 6,
+            background: 'linear-gradient(135deg, #f5f7fa, #e6ecf5)',
+            borderRadius: 14,
+            boxShadow:
+              'inset 0 2px 6px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.05)',
+          }}
         />
       </div>
 
