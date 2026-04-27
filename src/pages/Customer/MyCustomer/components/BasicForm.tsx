@@ -46,6 +46,17 @@ const BasicForm: React.FC<Props> = () => {
           options={STATUS_OPTIONS}
           initialValue={'未发送'}
         />
+        <ProFormSelect
+          name="source"
+          label="渠道"
+          width="md"
+          placeholder="请选择渠道"
+          options={[
+            { label: 'NAVER', value: 'naver' },
+            { label: 'YouTube', value: 'youtube' },
+            { label: 'GitHub', value: 'github' },
+          ]}
+        />
       </ProForm.Group>
 
 

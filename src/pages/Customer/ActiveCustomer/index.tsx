@@ -105,7 +105,16 @@ const TableList: React.FC = () => {
       width: 60,
       align: 'center',
     },
-
+    {
+      title: '渠道',
+      dataIndex: 'source',
+      valueType: 'select',
+      valueEnum: {
+        naver: { text: 'NAVER' },
+        youtube: { text: 'YouTube' },
+        github: { text: 'GitHub' },
+      },
+    },
     {
       title: '联系方式',
       dataIndex: 'contact',

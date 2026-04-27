@@ -40,7 +40,17 @@ const BasicForm: React.FC<Props> = ({ newRecord }) => {
         <ProFormDigit name="followUpCommission" label="后续佣金" min={0} width="md" />
       </ProForm.Group>
       <ProForm.Group>
-
+        <ProFormSelect
+          name="source"
+          label="渠道"
+          width="md"
+          placeholder="请选择渠道"
+          options={[
+            { label: 'NAVER', value: 'naver' },
+            { label: 'YouTube', value: 'youtube' },
+            { label: 'GitHub', value: 'github' },
+          ]}
+        />
         <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
     </>

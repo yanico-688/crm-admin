@@ -24,6 +24,7 @@ type ActiveCustomer = {
 
 const columns: ProColumns<ActiveCustomer>[] = [
   { title: '状态', dataIndex: 'status' },
+
   { title: '联系方式', dataIndex: 'contact' },
   {
     title: '告知ChatGPT5',

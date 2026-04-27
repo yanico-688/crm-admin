@@ -33,6 +33,16 @@ const AllCustomersPage: React.FC = () => {
       valueType: 'index',
       width: 80,
     },
+    {
+      title: '渠道',
+      dataIndex: 'source',
+      valueType: 'select',
+      valueEnum: {
+        naver: { text: 'NAVER' },
+        youtube: { text: 'YouTube' },
+        github: { text: 'GitHub' },
+      },
+    },
     { title: '联系方式', dataIndex: 'contact', copyable: true, sorter: true, width: 200 },
     {
       title: '平台网址',

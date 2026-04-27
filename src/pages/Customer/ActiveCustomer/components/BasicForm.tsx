@@ -143,6 +143,17 @@ const BasicForm: React.FC = () => {
       </ProForm.Group>
       <ProForm.Group>
         <ProFormText name="owner" label="负责人" width="md" />
+        <ProFormSelect
+          name="source"
+          label="渠道"
+          width="md"
+          placeholder="请选择渠道"
+          options={[
+            { label: 'NAVER', value: 'naver' },
+            { label: 'YouTube', value: 'youtube' },
+            { label: 'GitHub', value: 'github' },
+          ]}
+        />
         <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
 

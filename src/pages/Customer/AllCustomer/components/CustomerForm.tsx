@@ -61,6 +61,17 @@ const CustomerForm: React.FC<Props> = ({ open, onOpenChange, onFinish, values })
           options={STATUS_OPTIONS}
           rules={[{ required: true, message: '请选择状态' }]}
         />
+        <ProFormSelect
+          name="source"
+          label="渠道"
+          width="md"
+          placeholder="请选择渠道"
+          options={[
+            { label: 'NAVER', value: 'naver' },
+            { label: 'YouTube', value: 'youtube' },
+            { label: 'GitHub', value: 'github' },
+          ]}
+        />
         <ProFormText name="tags" label="标签" width="md" />
         <ProFormTextArea name="remark" label="备注" width="md" />
       </ProForm.Group>
