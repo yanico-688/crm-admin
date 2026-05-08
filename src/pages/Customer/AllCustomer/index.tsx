@@ -5,6 +5,7 @@ import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro
 import { Button, message, Popconfirm, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import CustomerForm from './components/CustomerForm';
+import BatchCreate from '@/pages/Customer/AllCustomer/components/BatchCreate';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   可领取: { color: 'green', text: '可领取' },
@@ -18,6 +19,7 @@ const AllCustomersPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState<any>();
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [batchCreateOpen, setBatchCreateOpen] = useState(false);
   const location = useLocation();
   const access = useAccess();
   // 监听路由变化
@@ -258,7 +260,9 @@ const AllCustomersPage: React.FC = () => {
           >
             新建
           </Button>,
-
+          <Button key="batch" onClick={() => setBatchCreateOpen(true)}>
+            批量导入
+          </Button>,
           selectedRows.length > 0 && (
             <Popconfirm
               key="batchDelete"
@@ -312,6 +316,14 @@ const AllCustomersPage: React.FC = () => {
             message.error(error?.response?.data?.message ?? '添加失败，请重试！');
             return false;
           }
+        }}
+      />
+      <BatchCreate
+        open={batchCreateOpen}
+        onOpenChange={setBatchCreateOpen}
+        onSuccess={() => {
+          setBatchCreateOpen(false);
+          actionRef.current?.reload();
         }}
       />
     </PageContainer>
